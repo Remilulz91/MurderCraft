@@ -53,6 +53,8 @@ public class GameManager {
     private int gameTicksLeft = 0;
     private boolean hiddenPistolSpawned = false;
     private long startedAt = 0;
+    /** Si true, les conditions de victoire ne sont pas vérifiées (mode test). */
+    private boolean debugMode = false;
 
     public GamePhase getPhase() {
         return phase;
@@ -124,14 +126,22 @@ public class GameManager {
         return true;
     }
 
-    /** Force l'arrêt d'une partie en cours. */
+    /**
+     * Force l'arrêt d'une partie en cours — RESET IMMÉDIAT vers le lobby.
+     * Contrairement à un endGame naturel, on ne fait pas le countdown de 10s.
+     */
     public void stopGame(boolean canceled) {
         if (phase == GamePhase.LOBBY) return;
-        if (canceled) {
-            endGame(WinResult.CANCELED);
-        } else {
-            endGame(WinResult.DRAW);
-        }
+
+        WinResult result = canceled ? WinResult.CANCELED : WinResult.DRAW;
+        broadcast(Text.empty());
+        broadcast(Text.literal("═══════════════════════").formatted(Formatting.GOLD));
+        broadcast(result.getDisplayText());
+        broadcast(Text.literal("═══════════════════════").formatted(Formatting.GOLD));
+        broadcast(Text.empty());
+
+        // Reset immédiat (pas de countdown ENDING)
+        resetToLobby();
     }
 
     private List<ServerPlayerEntity> resolveParticipants() {
@@ -182,18 +192,29 @@ public class GameManager {
 
     /**
      * Démarre une partie IMMÉDIATEMENT en bypassant toutes les vérifications
-     * (countdown, min players). Si forcedRole != null, le rôle du caller est
-     * forcé après l'assignation initiale.
+     * (countdown, min players, conditions de victoire). Si forcedRole != null,
+     * le rôle du caller est forcé après l'assignation initiale.
+     *
+     * Si une partie est déjà en cours/ENDING : reset automatique avant le start.
+     * Active le debugMode qui DÉSACTIVE les conditions de victoire — la partie
+     * ne s'arrêtera que via /murder stop ou /murder debug endwith.
      */
     public boolean debugStart(MinecraftServer server, ServerPlayerEntity caller, Role forcedRole) {
-        if (phase != GamePhase.LOBBY) return false;
         this.server = server;
+
+        // Force reset si une partie est en cours / en ENDING
+        if (phase != GamePhase.LOBBY) {
+            resetToLobby();
+        }
 
         // Auto-ajout du caller s'il n'est pas déjà dans le lobby
         if (caller != null && !participants.contains(caller.getUuid())) {
             participants.add(caller.getUuid());
         }
         if (participants.isEmpty()) return false;
+
+        // Active le mode debug — empêche les conditions de victoire de fermer la partie
+        this.debugMode = true;
 
         List<ServerPlayerEntity> players = resolveParticipants();
         roleManager.assignRoles(players);
@@ -243,6 +264,11 @@ public class GameManager {
     public void forceEndGame(WinResult result) {
         if (phase == GamePhase.LOBBY) return;
         endGame(result);
+    }
+
+    /** Indique si le mode debug est activé (pour la commande /murder debug info). */
+    public boolean isDebugMode() {
+        return debugMode;
     }
 
     private void sendBriefing(ServerPlayerEntity player, Role role) {
@@ -303,6 +329,9 @@ public class GameManager {
 
     /** Vérifie les conditions de victoire et termine la partie le cas échéant. */
     private void checkWinConditions() {
+        // En mode debug, on ne vérifie rien — la partie ne s'arrête que manuellement
+        if (debugMode) return;
+
         int murderersAlive = roleManager.countAliveByRole(Role.MURDERER);
         int innocentsAlive = roleManager.countAliveByRole(Role.INNOCENT);
         int detectivesAlive = roleManager.countAliveByRole(Role.DETECTIVE);
@@ -355,6 +384,7 @@ public class GameManager {
         this.countdownTicksLeft = 0;
         this.hiddenPistolSpawned = false;
         this.tickCounter = 0;
+        this.debugMode = false;
 
         // Restaurer les joueurs
         if (server != null) {

@@ -159,6 +159,9 @@ public class DebugCommand {
 
         src.sendFeedback(() -> Text.literal("═══ MurderCraft DEBUG ═══").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD), false);
         src.sendFeedback(() -> Text.literal("Phase: ").append(Text.literal(gm.getPhase().name()).formatted(Formatting.AQUA)), false);
+        src.sendFeedback(() -> Text.literal("Debug mode: ").append(
+                Text.literal(gm.isDebugMode() ? "ON (win conditions disabled)" : "off")
+                        .formatted(gm.isDebugMode() ? Formatting.LIGHT_PURPLE : Formatting.GRAY)), false);
         src.sendFeedback(() -> Text.literal("Participants: " + gm.getParticipants().size()), false);
         src.sendFeedback(() -> Text.literal("Min players (config): " + MurderCraftConfig.get().minPlayers), false);
 
