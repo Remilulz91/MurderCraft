@@ -28,6 +28,9 @@ remappedSrc/
 .DS_Store
 Thumbs.db
 
+# Aperçus agrandis générés (ne pas inclure dans le build)
+*_8x.png
+
 # Environment / secrets
 .env
 *.local
