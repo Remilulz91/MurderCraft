@@ -9,12 +9,6 @@
 #
 #      https://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 
 ##############################################################################
 #
@@ -29,13 +23,13 @@ app_path=$0
 
 # Need this for daisy-chained symlinks.
 while
-    APP_HOME=${app_path%"${app_path##*/}"}  # leaves a trailing /; empty if no leading path
+    APP_HOME=${app_path%"${app_path##*/}"}
     [ -h "$app_path" ]
 do
     ls=$( ls -ld "$app_path" )
     link=${ls#*' -> '}
-    case $link in             #(
-      /*)   app_path=$link ;; #(
+    case $link in
+      /*)   app_path=$link ;;
       *)    app_path=$APP_HOME$link ;;
     esac
 done
@@ -72,10 +66,22 @@ location of your Java installation."
     fi
 else
     JAVACMD=java
-    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+    if ! command -v java >/dev/null 2>&1
+    then
+        die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
 
 Please set the JAVA_HOME variable in your environment to match the
 location of your Java installation."
+    fi
 fi
 
-exec "$JAVACMD" "$@" -classpath "$APP_HOME/gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+
+# IMPORTANT : "$@" doit être placé APRÈS la classe main (sinon Java tente d'exécuter
+# "build" comme une classe Java au lieu de la passer comme argument à Gradle).
+exec "$JAVACMD" \
+    $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS \
+    "-Dorg.gradle.appname=$APP_BASE_NAME" \
+    -classpath "$CLASSPATH" \
+    org.gradle.wrapper.GradleWrapperMain \
+    "$@"
