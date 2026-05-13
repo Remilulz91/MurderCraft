@@ -56,6 +56,29 @@ public class GameManager {
     /** Si true, les conditions de victoire ne sont pas vérifiées (mode test). */
     private boolean debugMode = false;
 
+    // === Session multi-manches ===
+    private int currentRound = 0;
+    private int sessionMurdererWins = 0;
+    private int sessionInnocentWins = 0;
+    private boolean inSession = false;
+    private boolean awaitingNextRound = false;
+
+    public int getCurrentRound() {
+        return currentRound;
+    }
+
+    public int getSessionMurdererWins() {
+        return sessionMurdererWins;
+    }
+
+    public int getSessionInnocentWins() {
+        return sessionInnocentWins;
+    }
+
+    public boolean isInSession() {
+        return inSession;
+    }
+
     public GamePhase getPhase() {
         return phase;
     }
@@ -101,7 +124,10 @@ public class GameManager {
         return removed;
     }
 
-    /** Démarre une nouvelle partie (manuelle via /murder start ou auto si min joueurs atteint). */
+    /**
+     * Démarre une nouvelle session de plusieurs manches (4 par défaut).
+     * Vérifie le nombre min de joueurs et lance la première manche.
+     */
     public boolean startGame(MinecraftServer server) {
         if (phase != GamePhase.LOBBY) {
             return false;
@@ -117,13 +143,64 @@ public class GameManager {
         }
 
         this.server = server;
+
+        // Initialise la session
+        this.inSession = true;
+        this.currentRound = 0;
+        this.sessionMurdererWins = 0;
+        this.sessionInnocentWins = 0;
+        this.awaitingNextRound = false;
+
+        broadcast(Text.translatable("murdercraft.session.started", cfg.maxRounds)
+                .formatted(Formatting.GOLD, Formatting.BOLD));
+
+        return startNextRound();
+    }
+
+    /** Démarre la manche suivante dans la session. */
+    private boolean startNextRound() {
+        MurderCraftConfig cfg = MurderCraftConfig.get();
+        currentRound++;
+
+        if (currentRound > cfg.maxRounds) {
+            endSession();
+            return false;
+        }
+
         this.phase = GamePhase.STARTING;
         this.countdownTicksLeft = cfg.startCountdownSeconds * 20;
         this.hiddenPistolSpawned = false;
+        this.awaitingNextRound = false;
 
-        broadcast(Text.translatable("murdercraft.game.starting")
+        broadcast(Text.translatable("murdercraft.round.starting", currentRound, cfg.maxRounds)
                 .formatted(Formatting.GOLD, Formatting.BOLD));
         return true;
+    }
+
+    /** Termine la session en cours et affiche le vainqueur final. */
+    private void endSession() {
+        broadcast(Text.empty());
+        broadcast(Text.literal("═══════════════════════════════").formatted(Formatting.GOLD));
+        broadcast(Text.translatable("murdercraft.session.over").formatted(Formatting.GOLD, Formatting.BOLD));
+        broadcast(Text.translatable("murdercraft.session.score",
+                sessionInnocentWins, sessionMurdererWins).formatted(Formatting.WHITE));
+
+        Text winnerText;
+        if (sessionInnocentWins > sessionMurdererWins) {
+            winnerText = Text.translatable("murdercraft.win.innocents").formatted(Formatting.GREEN, Formatting.BOLD);
+        } else if (sessionMurdererWins > sessionInnocentWins) {
+            winnerText = Text.translatable("murdercraft.win.murderers").formatted(Formatting.DARK_RED, Formatting.BOLD);
+        } else {
+            winnerText = Text.translatable("murdercraft.win.draw").formatted(Formatting.YELLOW, Formatting.BOLD);
+        }
+        broadcast(Text.translatable("murdercraft.session.final_winner").append(winnerText));
+        broadcast(Text.literal("═══════════════════════════════").formatted(Formatting.GOLD));
+        broadcast(Text.empty());
+
+        this.inSession = false;
+        this.tickCounter = 200; // 10s avant retour lobby complet
+        this.phase = GamePhase.ENDING;
+        this.awaitingNextRound = false;
     }
 
     /**
@@ -266,6 +343,64 @@ public class GameManager {
         endGame(result);
     }
 
+    // ============================================================
+    // === RÈGLES PISTOLET (Phase A) ==============================
+    // ============================================================
+
+    /**
+     * Vérification périodique : applique les règles autour des pistolets.
+     *   - Un MEURTRIER avec un pistolet → on lui retire et on le drop au sol (HIDDEN_PISTOL)
+     *   - Un INNOCENT avec un HIDDEN_PISTOL → promotion immédiate en JUSTICIER
+     */
+    private void checkInventoryRules() {
+        if (server == null) return;
+        for (UUID id : participants) {
+            ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
+            if (p == null || !roleManager.isAlive(p)) continue;
+
+            Role role = roleManager.getRole(p);
+
+            // Innocent qui a ramassé le pistolet caché → promotion auto
+            if (role == Role.INNOCENT && hasHiddenPistol(p) && !roleManager.isPermanentlyDisarmed(p.getUuid())) {
+                removeAllPistols(p);
+                p.getInventory().insertStack(new ItemStack(ModItems.PISTOL));
+                promoteToDetective(p);
+            }
+            // Meurtrier avec un pistolet → on lui retire et drop au sol
+            else if (role == Role.MURDERER && hasAnyPistol(p)) {
+                removeAllPistols(p);
+                dropHiddenPistolAt(p);
+                p.sendMessage(Text.translatable("murdercraft.murderer.cannot_take_pistol")
+                        .formatted(Formatting.RED), true);
+            }
+        }
+    }
+
+    /** Drop un HIDDEN_PISTOL au sol à la position du joueur (utilisé pour le tir ami et la mort). */
+    public void dropHiddenPistolAt(ServerPlayerEntity player) {
+        if (player == null || player.getServerWorld() == null) return;
+        ItemStack stack = new ItemStack(ModItems.HIDDEN_PISTOL);
+        ItemEntity drop = new ItemEntity(player.getServerWorld(),
+                player.getX(), player.getY() + 0.5, player.getZ(), stack);
+        drop.setNeverDespawn();
+        drop.setGlowing(true);
+        player.getServerWorld().spawnEntity(drop);
+    }
+
+    private boolean hasHiddenPistol(ServerPlayerEntity p) {
+        return p.getInventory().containsAny(s -> s.isOf(ModItems.HIDDEN_PISTOL));
+    }
+
+    private boolean hasAnyPistol(ServerPlayerEntity p) {
+        return p.getInventory().containsAny(s -> s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL));
+    }
+
+    private void removeAllPistols(ServerPlayerEntity p) {
+        p.getInventory().remove(
+                s -> s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL),
+                Integer.MAX_VALUE, p.getInventory());
+    }
+
     /** Indique si le mode debug est activé (pour la commande /murder debug info). */
     public boolean isDebugMode() {
         return debugMode;
@@ -346,9 +481,22 @@ public class GameManager {
 
     private void endGame(WinResult result) {
         this.phase = GamePhase.ENDING;
+
+        // Mise à jour des stats de session
+        if (inSession) {
+            if (result == WinResult.INNOCENTS_WIN) sessionInnocentWins++;
+            if (result == WinResult.MURDERERS_WIN) sessionMurdererWins++;
+        }
+
         broadcast(Text.empty());
         broadcast(Text.literal("═══════════════════════").formatted(Formatting.GOLD));
         broadcast(result.getDisplayText());
+        if (inSession) {
+            MurderCraftConfig cfg = MurderCraftConfig.get();
+            broadcast(Text.translatable("murdercraft.round.result",
+                    currentRound, cfg.maxRounds,
+                    sessionInnocentWins, sessionMurdererWins).formatted(Formatting.AQUA));
+        }
         broadcast(Text.literal("═══════════════════════").formatted(Formatting.GOLD));
         broadcast(Text.empty());
 
@@ -364,9 +512,19 @@ public class GameManager {
             }
         }
 
-        // Reset après 10 sec
         this.gameTicksLeft = 0;
-        this.tickCounter = 200; // 10 seconds before going back to lobby
+
+        // Décider du temps avant la prochaine étape
+        MurderCraftConfig cfg = MurderCraftConfig.get();
+        if (inSession && currentRound < cfg.maxRounds && !debugMode) {
+            // Encore des manches à jouer → délai inter-manche puis nouvelle manche
+            this.tickCounter = cfg.interRoundSeconds * 20;
+            this.awaitingNextRound = true;
+        } else {
+            // Dernière manche OU mode debug OU pas en session → retour lobby
+            this.tickCounter = 200; // 10s
+            this.awaitingNextRound = false;
+        }
 
         // Notifier les clients
         if (server != null) {
@@ -385,6 +543,12 @@ public class GameManager {
         this.hiddenPistolSpawned = false;
         this.tickCounter = 0;
         this.debugMode = false;
+        // Reset session
+        this.inSession = false;
+        this.currentRound = 0;
+        this.sessionMurdererWins = 0;
+        this.sessionInnocentWins = 0;
+        this.awaitingNextRound = false;
 
         // Restaurer les joueurs
         if (server != null) {
@@ -425,6 +589,11 @@ public class GameManager {
                     spawnHiddenPistol();
                 }
 
+                // Vérification d'inventaire 2x par seconde (règles pistolet)
+                if (gameTicksLeft % 10 == 0) {
+                    checkInventoryRules();
+                }
+
                 // Mise à jour du HUD client toutes les secondes
                 if (gameTicksLeft % 20 == 0) {
                     if (server != null) {
@@ -448,7 +617,15 @@ public class GameManager {
             case ENDING -> {
                 tickCounter--;
                 if (tickCounter <= 0) {
-                    resetToLobby();
+                    if (awaitingNextRound) {
+                        // Lance la manche suivante (garde les participants)
+                        startNextRound();
+                    } else if (inSession) {
+                        // Dernière manche : finalise la session
+                        endSession();
+                    } else {
+                        resetToLobby();
+                    }
                 }
             }
             default -> {

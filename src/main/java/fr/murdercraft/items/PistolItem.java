@@ -124,11 +124,15 @@ public class PistolItem extends Item {
             shooter.sendMessage(Text.translatable("murdercraft.pistol.hit_murderer", victim.getName())
                     .formatted(Formatting.GREEN), false);
         } else {
-            // Tir sur innocent ou autre — perte du pistolet
+            // Tir sur innocent ou autre — le pistolet tombe au sol (ramassable par innocents seulement)
             if (MurderCraftConfig.get().detectiveLosesGunOnFriendlyFire) {
                 shooter.getInventory().remove(s -> s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL),
                         Integer.MAX_VALUE, shooter.getInventory());
                 gm.getRoleManager().markPermanentlyDisarmed(shooter.getUuid());
+                // Le justicier redevient innocent (perte du rôle)
+                gm.getRoleManager().setRole(shooter.getUuid(), Role.INNOCENT);
+                // Drop le pistolet au sol pour qu'un autre innocent puisse le récupérer
+                gm.dropHiddenPistolAt(shooter);
                 shooter.sendMessage(Text.translatable("murdercraft.pistol.friendly_fire")
                         .formatted(Formatting.RED, Formatting.BOLD), false);
             }

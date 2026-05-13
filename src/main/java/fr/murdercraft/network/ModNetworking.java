@@ -38,7 +38,8 @@ public class ModNetworking {
             ctx.client().execute(() -> {
                 GamePhase phase = parsePhase(payload.phase());
                 WinResult win = payload.winResult().isEmpty() ? null : parseWin(payload.winResult());
-                MurderCraftClientState.updateGameState(phase, payload.secondsLeft(), win);
+                MurderCraftClientState.updateGameState(phase, payload.secondsLeft(), win,
+                        payload.currentRound(), payload.maxRounds());
             });
         });
 
@@ -52,10 +53,13 @@ public class ModNetworking {
     }
 
     public static void sendGameState(ServerPlayerEntity player, GamePhase phase, int secondsLeft, WinResult win) {
+        fr.murdercraft.game.GameManager gm = fr.murdercraft.game.GameManager.get();
         ServerPlayNetworking.send(player, new GameStatePayload(
                 phase.name(),
                 secondsLeft,
-                win == null ? "" : win.name()
+                win == null ? "" : win.name(),
+                gm.isInSession() ? gm.getCurrentRound() : 0,
+                fr.murdercraft.config.MurderCraftConfig.get().maxRounds
         ));
     }
 

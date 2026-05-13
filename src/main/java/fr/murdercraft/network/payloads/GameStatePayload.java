@@ -12,8 +12,10 @@ import net.minecraft.util.Identifier;
  *   - phase : LOBBY / STARTING / IN_GAME / ENDING
  *   - secondsLeft : temps restant en secondes
  *   - winResult : résultat de la partie (uniquement si phase == ENDING), "" sinon
+ *   - currentRound / maxRounds : numéro de la manche en cours (0 si pas en session)
  */
-public record GameStatePayload(String phase, int secondsLeft, String winResult) implements CustomPayload {
+public record GameStatePayload(String phase, int secondsLeft, String winResult,
+                                int currentRound, int maxRounds) implements CustomPayload {
 
     public static final Identifier IDENTIFIER = MurderCraft.id("game_state");
     public static final Id<GameStatePayload> ID = new Id<>(IDENTIFIER);
@@ -22,6 +24,8 @@ public record GameStatePayload(String phase, int secondsLeft, String winResult) 
             PacketCodecs.STRING, GameStatePayload::phase,
             PacketCodecs.INTEGER, GameStatePayload::secondsLeft,
             PacketCodecs.STRING, GameStatePayload::winResult,
+            PacketCodecs.INTEGER, GameStatePayload::currentRound,
+            PacketCodecs.INTEGER, GameStatePayload::maxRounds,
             GameStatePayload::new
     );
 

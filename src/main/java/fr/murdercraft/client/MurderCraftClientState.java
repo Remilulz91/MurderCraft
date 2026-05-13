@@ -15,6 +15,16 @@ public class MurderCraftClientState {
     private static int secondsLeft = 0;
     private static WinResult lastWinResult = null;
     private static long winResultShownAt = 0;
+    private static int currentRound = 0;
+    private static int maxRounds = 4;
+
+    public static int getCurrentRound() {
+        return currentRound;
+    }
+
+    public static int getMaxRounds() {
+        return maxRounds;
+    }
 
     public static Role getMyRole() {
         return myRole;
@@ -40,15 +50,19 @@ public class MurderCraftClientState {
         return winResultShownAt;
     }
 
-    public static void updateGameState(GamePhase phase, int seconds, WinResult winResult) {
+    public static void updateGameState(GamePhase phase, int seconds, WinResult winResult,
+                                        int round, int maxR) {
         currentPhase = phase;
         secondsLeft = seconds;
+        currentRound = round;
+        maxRounds = maxR;
         if (winResult != null) {
             lastWinResult = winResult;
             winResultShownAt = System.currentTimeMillis();
         }
         if (phase == GamePhase.LOBBY) {
             myRole = Role.SPECTATOR;
+            currentRound = 0;
         }
     }
 }

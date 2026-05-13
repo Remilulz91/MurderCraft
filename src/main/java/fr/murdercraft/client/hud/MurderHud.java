@@ -62,12 +62,24 @@ public class MurderHud {
     private static void renderInGame(DrawContext ctx, TextRenderer tr, int sw, int sh) {
         Role role = MurderCraftClientState.getMyRole();
         int sec = MurderCraftClientState.getSecondsLeft();
+        int round = MurderCraftClientState.getCurrentRound();
+        int maxRounds = MurderCraftClientState.getMaxRounds();
+
+        int rx = 8, ry = 8;
+
+        // === Coin haut-gauche : manche (si en session) ===
+        if (round > 0 && maxRounds > 0) {
+            Text roundText = Text.translatable("murdercraft.hud.round", round, maxRounds)
+                    .formatted(Formatting.GOLD, Formatting.BOLD);
+            drawPanel(ctx, rx - 4, ry - 3, tr.getWidth(roundText) + 8, 12);
+            ctx.drawText(tr, roundText, rx, ry, ACCENT_COLOR, true);
+            ry += 14;
+        }
 
         // === Coin haut-gauche : rôle ===
         Text roleText = Text.translatable("murdercraft.hud.role_label")
                 .append(": ")
                 .append(role.getDisplayName());
-        int rx = 8, ry = 8;
         drawPanel(ctx, rx - 4, ry - 3, tr.getWidth(roleText) + 8, 12);
         ctx.drawText(tr, roleText, rx, ry, PRIMARY_COLOR, true);
 
@@ -79,10 +91,6 @@ public class MurderHud {
         Text colored = Text.literal(timeText.getString()).formatted(timeColor);
         drawPanel(ctx, rx - 4, ty - 3, tr.getWidth(colored) + 8, 12);
         ctx.drawText(tr, colored, rx, ty, 0xFFFFFFFF, true);
-
-        // === Briefing centré pendant les 5 premières secondes ===
-        // (utilise le timer de fin de countdown comme proxy)
-        // On le saute pour rester simple
     }
 
     private static void renderEnding(DrawContext ctx, TextRenderer tr, int sw, int sh) {

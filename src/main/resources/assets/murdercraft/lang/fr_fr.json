@@ -29,6 +29,15 @@
   "murdercraft.game.starting": "▶ La partie va démarrer !",
   "murdercraft.game.started": "✦ La partie a commencé ! Bonne chance.",
 
+  "murdercraft.session.started": "▶ Nouvelle session démarrée : %s manches au total",
+  "murdercraft.session.over": "⛳ SESSION TERMINÉE",
+  "murdercraft.session.score": "Score final : Innocents %s — Meurtriers %s",
+  "murdercraft.session.final_winner": "Vainqueur de la session : ",
+  "murdercraft.round.starting": "▶ Manche %s / %s — Démarrage",
+  "murdercraft.round.result": "Manche %s/%s — Score : Innocents %s | Meurtriers %s",
+  "murdercraft.murderer.cannot_take_pistol": "⛔ Les meurtriers ne peuvent pas garder un pistolet — il est tombé au sol",
+  "murdercraft.hud.round": "Manche %s/%s",
+
   "murdercraft.countdown.seconds": "Démarrage dans %s...",
   "murdercraft.countdown.ten_sec": "Démarrage dans 10 secondes !",
 
@@ -87,6 +96,9 @@
   "config.murdercraft.gameDuration": "Durée de la partie (s)",
   "config.murdercraft.countdown": "Compte à rebours de départ (s)",
   "config.murdercraft.hiddenPistolDelay": "Délai avant pistolet caché (s)",
+  "config.murdercraft.maxRounds": "Nombre de manches par session",
+  "config.murdercraft.maxRounds.tooltip": "Nombre de manches successives dans une session. Par défaut : 4 (comme GMod Murder).",
+  "config.murdercraft.interRoundSeconds": "Délai entre 2 manches (s)",
   "config.murdercraft.murdererCount": "Nombre de meurtriers",
   "config.murdercraft.detectiveCount": "Nombre de justiciers",
   "config.murdercraft.knifeOneShot": "Couteau one-shot",

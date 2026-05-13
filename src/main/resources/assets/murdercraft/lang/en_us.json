@@ -29,6 +29,15 @@
   "murdercraft.game.starting": "▶ The game is starting!",
   "murdercraft.game.started": "✦ The game has begun! Good luck.",
 
+  "murdercraft.session.started": "▶ New session started: %s rounds total",
+  "murdercraft.session.over": "⛳ SESSION OVER",
+  "murdercraft.session.score": "Final score: Innocents %s — Murderers %s",
+  "murdercraft.session.final_winner": "Session winner: ",
+  "murdercraft.round.starting": "▶ Round %s / %s — Starting",
+  "murdercraft.round.result": "Round %s/%s — Score: Innocents %s | Murderers %s",
+  "murdercraft.murderer.cannot_take_pistol": "⛔ Murderers cannot keep a pistol — it has been dropped",
+  "murdercraft.hud.round": "Round %s/%s",
+
   "murdercraft.countdown.seconds": "Starting in %s...",
   "murdercraft.countdown.ten_sec": "Starting in 10 seconds!",
 
@@ -87,6 +96,9 @@
   "config.murdercraft.gameDuration": "Game duration (s)",
   "config.murdercraft.countdown": "Start countdown (s)",
   "config.murdercraft.hiddenPistolDelay": "Hidden pistol delay (s)",
+  "config.murdercraft.maxRounds": "Rounds per session",
+  "config.murdercraft.maxRounds.tooltip": "Number of consecutive rounds in a session. Default: 4 (like GMod Murder).",
+  "config.murdercraft.interRoundSeconds": "Inter-round delay (s)",
   "config.murdercraft.murdererCount": "Murderer count",
   "config.murdercraft.detectiveCount": "Detective count",
   "config.murdercraft.knifeOneShot": "Knife one-shot",

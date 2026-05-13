@@ -49,6 +49,15 @@ public class ModMenuIntegration implements ModMenuApi {
                     .setMin(0).setMax(600).setDefaultValue(60)
                     .setSaveConsumer(v -> cfg.hiddenPistolSpawnDelaySeconds = v).build());
 
+            game.addEntry(entry.startIntField(Text.translatable("config.murdercraft.maxRounds"), cfg.maxRounds)
+                    .setMin(1).setMax(10).setDefaultValue(4)
+                    .setTooltip(Text.translatable("config.murdercraft.maxRounds.tooltip"))
+                    .setSaveConsumer(v -> cfg.maxRounds = v).build());
+
+            game.addEntry(entry.startIntField(Text.translatable("config.murdercraft.interRoundSeconds"), cfg.interRoundSeconds)
+                    .setMin(0).setMax(120).setDefaultValue(15)
+                    .setSaveConsumer(v -> cfg.interRoundSeconds = v).build());
+
             // === Catégorie : Rôles ===
             ConfigCategory roles = builder.getOrCreateCategory(Text.translatable("config.murdercraft.category.roles"));
 

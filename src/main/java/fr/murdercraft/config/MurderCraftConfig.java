@@ -36,16 +36,22 @@ public class MurderCraftConfig {
     public int minPlayers = 5;
 
     /** Nombre maximum de joueurs par partie (0 = illimité). */
-    public int maxPlayers = 16;
+    public int maxPlayers = 32;
 
-    /** Durée d'une partie en secondes (par défaut : 8 minutes). */
-    public int gameDurationSeconds = 480;
+    /** Durée d'une manche en secondes (par défaut : 15 minutes — comme GMod Murder). */
+    public int gameDurationSeconds = 900;
 
     /** Durée de la phase de préparation au début (countdown) en secondes. */
     public int startCountdownSeconds = 10;
 
     /** Délai avant le spawn du 2ème pistolet caché (en secondes depuis le début). */
     public int hiddenPistolSpawnDelaySeconds = 60;
+
+    /** Nombre de manches dans une session (par défaut : 4 — comme GMod Murder). */
+    public int maxRounds = 4;
+
+    /** Délai entre deux manches en secondes (pour pause + transition). */
+    public int interRoundSeconds = 15;
 
     // === Rôles ===
 
