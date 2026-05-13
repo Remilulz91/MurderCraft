@@ -5,6 +5,7 @@ import fr.murdercraft.game.GameManager;
 import fr.murdercraft.roles.Role;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -53,32 +54,54 @@ public class PistolItem extends Item {
         }
 
         GameManager gm = GameManager.get();
-        if (!gm.isGameActive()) {
+        boolean debugMobDamage = MurderCraftConfig.get().debugAllowMobDamage;
+
+        // En mode debug avec mob damage, on autorise le tir même hors partie
+        // (utile pour valider l'animation et le raycast en solo)
+        if (!gm.isGameActive() && !debugMobDamage) {
             shooter.sendMessage(Text.translatable("murdercraft.pistol.no_game").formatted(Formatting.RED), true);
             return TypedActionResult.fail(stack);
         }
 
-        Role role = gm.getRoleManager().getRole(shooter);
-        if (role != Role.DETECTIVE) {
-            shooter.sendMessage(Text.translatable("murdercraft.pistol.not_detective").formatted(Formatting.RED), true);
-            return TypedActionResult.fail(stack);
+        if (gm.isGameActive()) {
+            Role role = gm.getRoleManager().getRole(shooter);
+            if (role != Role.DETECTIVE && !debugMobDamage) {
+                shooter.sendMessage(Text.translatable("murdercraft.pistol.not_detective").formatted(Formatting.RED), true);
+                return TypedActionResult.fail(stack);
+            }
         }
 
         // Effets visuels et sonores
         world.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
                 SoundEvents.ENTITY_FIREWORK_ROCKET_BLAST, shooter.getSoundCategory(), 1.0f, 1.5f);
 
-        // Raycast
-        Entity hit = raycast(world, shooter);
+        // Raycast (joueurs + mobs si debug)
+        Entity hit = raycast(world, shooter, debugMobDamage);
 
         if (hit instanceof ServerPlayerEntity victim) {
-            handleHit(shooter, victim, gm);
+            if (gm.isGameActive()) {
+                handleHit(shooter, victim, gm);
+            }
+        } else if (hit instanceof LivingEntity mob && debugMobDamage) {
+            handleMobHit(shooter, mob);
         }
 
         // Cooldown
         player.getItemCooldownManager().set(this, COOLDOWN_TICKS);
 
         return TypedActionResult.success(stack);
+    }
+
+    /** [DEBUG] Tue un mob d'un coup avec effets — pour tester en solo. */
+    private void handleMobHit(ServerPlayerEntity shooter, LivingEntity mob) {
+        if (shooter.getServerWorld() != null) {
+            shooter.getServerWorld().spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
+                    mob.getX(), mob.getY() + 1.0, mob.getZ(),
+                    15, 0.3, 0.3, 0.3, 0.1);
+        }
+        mob.damage(mob.getDamageSources().playerAttack(shooter), Float.MAX_VALUE);
+        shooter.sendMessage(Text.translatable("murdercraft.debug.mob_hit", mob.getName())
+                .formatted(Formatting.LIGHT_PURPLE), true);
     }
 
     private void handleHit(ServerPlayerEntity shooter, ServerPlayerEntity victim, GameManager gm) {
@@ -112,8 +135,11 @@ public class PistolItem extends Item {
         }
     }
 
-    /** Effectue un raycast sur les entités joueurs uniquement. */
-    private Entity raycast(World world, ServerPlayerEntity shooter) {
+    /**
+     * Effectue un raycast — par défaut sur les joueurs uniquement.
+     * Si includeMobs=true (mode debug), prend aussi en compte tous les LivingEntity.
+     */
+    private Entity raycast(World world, ServerPlayerEntity shooter, boolean includeMobs) {
         Vec3d origin = shooter.getCameraPosVec(1.0f);
         Vec3d direction = shooter.getRotationVec(1.0f);
         Vec3d end = origin.add(direction.multiply(MAX_RANGE));
@@ -125,22 +151,29 @@ public class PistolItem extends Item {
                 ? origin.squaredDistanceTo(end)
                 : origin.squaredDistanceTo(blockHit.getPos());
 
-        // 2) Trouver l'entité joueur la plus proche dans la trajectoire
-        List<PlayerEntity> nearby = world.getEntitiesByType(EntityType.PLAYER,
-                shooter.getBoundingBox().expand(MAX_RANGE),
-                p -> p != shooter && p.isAlive());
+        // 2) Trouver l'entité cible la plus proche dans la trajectoire
+        List<? extends LivingEntity> nearby;
+        if (includeMobs) {
+            nearby = world.getEntitiesByClass(LivingEntity.class,
+                    shooter.getBoundingBox().expand(MAX_RANGE),
+                    e -> e != shooter && e.isAlive());
+        } else {
+            nearby = world.getEntitiesByType(EntityType.PLAYER,
+                    shooter.getBoundingBox().expand(MAX_RANGE),
+                    p -> p != shooter && p.isAlive());
+        }
 
         Entity closest = null;
         double closestDistSq = maxDistSq;
 
-        for (PlayerEntity p : nearby) {
-            net.minecraft.util.math.Box box = p.getBoundingBox().expand(0.3);
+        for (LivingEntity e : nearby) {
+            net.minecraft.util.math.Box box = e.getBoundingBox().expand(0.3);
             var optional = box.raycast(origin, end);
             if (optional.isPresent()) {
                 double distSq = origin.squaredDistanceTo(optional.get());
                 if (distSq < closestDistSq) {
                     closestDistSq = distSq;
-                    closest = p;
+                    closest = e;
                 }
             }
         }

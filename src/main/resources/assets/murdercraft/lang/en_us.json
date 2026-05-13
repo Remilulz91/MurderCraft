@@ -104,5 +104,11 @@
   "murdercraft.debug.giveitem.success": "[DEBUG] Item given: %s",
   "murdercraft.debug.spawnpistol.success": "[DEBUG] Hidden pistol spawned in front of you",
   "murdercraft.debug.spawnpistol.fail": "[DEBUG] Error spawning the pistol",
-  "murdercraft.debug.endwith.success": "[DEBUG] Game ended with result: %s"
+  "murdercraft.debug.endwith.success": "[DEBUG] Game ended with result: %s",
+  "murdercraft.debug.mob_hit": "[DEBUG] Target hit: %s",
+  "murdercraft.debug.mobdamage.toggled": "[DEBUG] Mob damage: %s",
+
+  "config.murdercraft.category.debug": "Debug (testing only)",
+  "config.murdercraft.debugAllowMobDamage": "Allow mob damage",
+  "config.murdercraft.debugAllowMobDamage.tooltip": "[DEBUG ONLY] The knife and pistol can deal lethal damage to mobs. Disable for real matches."
 }

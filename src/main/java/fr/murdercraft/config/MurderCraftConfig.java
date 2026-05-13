@@ -80,6 +80,15 @@ public class MurderCraftConfig {
     /** Afficher les sous-titres et indices contextuels ? */
     public boolean showSubtitles = true;
 
+    // === DEBUG (à désactiver pour les releases publiques) ===
+
+    /**
+     * [DEBUG] Permet aux armes (couteau, pistolet) d'infliger des dégâts létaux
+     * aux mobs (et pas uniquement aux joueurs). Utile pour tester le comportement
+     * en solo. À DÉSACTIVER pour les vraies parties.
+     */
+    public boolean debugAllowMobDamage = false;
+
     // === Méthodes ===
 
     public static MurderCraftConfig get() {

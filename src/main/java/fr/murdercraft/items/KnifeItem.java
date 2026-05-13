@@ -26,21 +26,35 @@ public class KnifeItem extends Item {
     public boolean postHit(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker instanceof ServerPlayerEntity attackerPlayer) {
             GameManager gm = GameManager.get();
+            MurderCraftConfig cfg = MurderCraftConfig.get();
+
+            // [DEBUG] One-shot les mobs si le flag est activé (peu importe le rôle)
+            if (cfg.debugAllowMobDamage && !(target instanceof ServerPlayerEntity)) {
+                target.damage(target.getDamageSources().playerAttack(attackerPlayer), Float.MAX_VALUE);
+                attackerPlayer.playSoundToPlayer(SoundEvents.BLOCK_LAVA_EXTINGUISH,
+                        attackerPlayer.getSoundCategory(), 0.4f, 1.5f);
+                attackerPlayer.sendMessage(Text.translatable("murdercraft.debug.mob_hit", target.getName())
+                        .formatted(net.minecraft.util.Formatting.LIGHT_PURPLE), true);
+                return true;
+            }
+
             if (gm.isGameActive() && gm.getRoleManager().getRole(attackerPlayer) == Role.MURDERER) {
                 if (target instanceof ServerPlayerEntity victim) {
                     // Vérifier que la victime est en jeu et vivante
                     if (gm.getRoleManager().isAlive(victim)) {
-                        if (MurderCraftConfig.get().knifeOneShot) {
+                        if (cfg.knifeOneShot) {
                             // One-shot
                             victim.damage(victim.getDamageSources().playerAttack(attackerPlayer), Float.MAX_VALUE);
                         }
                         // Son discret pour le meurtrier
-                        attackerPlayer.playSoundToPlayer(SoundEvents.BLOCK_LAVA_EXTINGUISH, attackerPlayer.getSoundCategory(), 0.4f, 1.5f);
+                        attackerPlayer.playSoundToPlayer(SoundEvents.BLOCK_LAVA_EXTINGUISH,
+                                attackerPlayer.getSoundCategory(), 0.4f, 1.5f);
                     }
                 }
             } else {
                 // Le joueur n'est pas meurtrier — empêcher l'attaque
-                attackerPlayer.sendMessage(Text.translatable("murdercraft.knife.not_murderer").formatted(net.minecraft.util.Formatting.RED), true);
+                attackerPlayer.sendMessage(Text.translatable("murdercraft.knife.not_murderer")
+                        .formatted(net.minecraft.util.Formatting.RED), true);
                 return false;
             }
         }

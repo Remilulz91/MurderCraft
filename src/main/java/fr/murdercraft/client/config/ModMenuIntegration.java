@@ -86,6 +86,14 @@ public class ModMenuIntegration implements ModMenuApi {
                     .setDefaultValue(true)
                     .setSaveConsumer(v -> cfg.showSubtitles = v).build());
 
+            // === Catégorie : Debug (à désactiver pour la prod) ===
+            ConfigCategory debug = builder.getOrCreateCategory(Text.translatable("config.murdercraft.category.debug"));
+
+            debug.addEntry(entry.startBooleanToggle(Text.translatable("config.murdercraft.debugAllowMobDamage"), cfg.debugAllowMobDamage)
+                    .setDefaultValue(false)
+                    .setTooltip(Text.translatable("config.murdercraft.debugAllowMobDamage.tooltip"))
+                    .setSaveConsumer(v -> cfg.debugAllowMobDamage = v).build());
+
             return builder.build();
         };
     }

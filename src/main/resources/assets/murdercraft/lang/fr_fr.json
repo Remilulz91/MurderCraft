@@ -104,5 +104,11 @@
   "murdercraft.debug.giveitem.success": "[DEBUG] Item donné : %s",
   "murdercraft.debug.spawnpistol.success": "[DEBUG] Pistolet caché spawné devant toi",
   "murdercraft.debug.spawnpistol.fail": "[DEBUG] Erreur lors du spawn du pistolet",
-  "murdercraft.debug.endwith.success": "[DEBUG] Partie terminée avec le résultat : %s"
+  "murdercraft.debug.endwith.success": "[DEBUG] Partie terminée avec le résultat : %s",
+  "murdercraft.debug.mob_hit": "[DEBUG] Cible touchée : %s",
+  "murdercraft.debug.mobdamage.toggled": "[DEBUG] Mob damage : %s",
+
+  "config.murdercraft.category.debug": "Debug (test seulement)",
+  "config.murdercraft.debugAllowMobDamage": "Autoriser dégâts sur mobs",
+  "config.murdercraft.debugAllowMobDamage.tooltip": "[DEBUG UNIQUEMENT] Le couteau et le pistolet peuvent infliger des dégâts létaux aux mobs. À désactiver pour les vraies parties."
 }

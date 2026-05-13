@@ -79,9 +79,26 @@ public class DebugCommand {
                         .then(CommandManager.literal("murderers").executes(ctx -> forceEnd(ctx, WinResult.MURDERERS_WIN)))
                         .then(CommandManager.literal("draw").executes(ctx -> forceEnd(ctx, WinResult.DRAW))))
 
+                // toggle mobdamage — bascule debugAllowMobDamage
+                .then(CommandManager.literal("toggle")
+                        .then(CommandManager.literal("mobdamage")
+                                .executes(DebugCommand::toggleMobDamage)))
+
                 // info
                 .then(CommandManager.literal("info")
                         .executes(DebugCommand::info));
+    }
+
+    private static int toggleMobDamage(CommandContext<ServerCommandSource> ctx) {
+        MurderCraftConfig cfg = MurderCraftConfig.get();
+        cfg.debugAllowMobDamage = !cfg.debugAllowMobDamage;
+        MurderCraftConfig.save();
+        boolean state = cfg.debugAllowMobDamage;
+        ctx.getSource().sendFeedback(() -> Text.translatable("murdercraft.debug.mobdamage.toggled",
+                Text.literal(state ? "ON" : "OFF")
+                        .formatted(state ? Formatting.GREEN : Formatting.GRAY))
+                .formatted(Formatting.LIGHT_PURPLE), true);
+        return 1;
     }
 
     private static Role parseRole(String s) {
@@ -162,6 +179,10 @@ public class DebugCommand {
         src.sendFeedback(() -> Text.literal("Debug mode: ").append(
                 Text.literal(gm.isDebugMode() ? "ON (win conditions disabled)" : "off")
                         .formatted(gm.isDebugMode() ? Formatting.LIGHT_PURPLE : Formatting.GRAY)), false);
+        boolean mobDmg = MurderCraftConfig.get().debugAllowMobDamage;
+        src.sendFeedback(() -> Text.literal("Mob damage: ").append(
+                Text.literal(mobDmg ? "ON" : "off")
+                        .formatted(mobDmg ? Formatting.LIGHT_PURPLE : Formatting.GRAY)), false);
         src.sendFeedback(() -> Text.literal("Participants: " + gm.getParticipants().size()), false);
         src.sendFeedback(() -> Text.literal("Min players (config): " + MurderCraftConfig.get().minPlayers), false);
 
