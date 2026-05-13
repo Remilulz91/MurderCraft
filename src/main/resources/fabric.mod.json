@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "murdercraft",
+  "version": "${version}",
+  "name": "MurderCraft",
+  "description": "Un mod multijoueur inspiré du mode Murder de Garry's Mod : 2 meurtriers cachés, 1 justicier armé, et des innocents qui doivent survivre. Trouvez le 2ème pistolet caché pour renverser la partie !",
+  "authors": [
+    "Remilulz_91"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/murdercraft",
+    "sources": "https://github.com/Remilulz91/MurderCraft",
+    "issues": "https://github.com/Remilulz91/MurderCraft/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/murdercraft/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "fr.murdercraft.MurderCraft"
+    ],
+    "client": [
+      "fr.murdercraft.client.MurderCraftClient"
+    ],
+    "modmenu": [
+      "fr.murdercraft.client.config.ModMenuIntegration"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=21"
+  },
+  "recommends": {
+    "cloth-config": "*",
+    "modmenu": "*"
+  }
+}

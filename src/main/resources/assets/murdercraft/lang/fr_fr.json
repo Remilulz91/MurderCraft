@@ -1,0 +1,97 @@
+{
+  "_comment": "MurderCraft — Traductions françaises",
+
+  "itemGroup.murdercraft.main": "MurderCraft",
+  "item.murdercraft.knife": "Couteau du Meurtrier",
+  "item.murdercraft.pistol": "Pistolet du Justicier",
+  "item.murdercraft.hidden_pistol": "Pistolet Caché",
+
+  "murdercraft.role.murderer": "Meurtrier",
+  "murdercraft.role.detective": "Justicier",
+  "murdercraft.role.innocent": "Innocent",
+  "murdercraft.role.spectator": "Spectateur",
+
+  "murdercraft.role.murderer.objective": "Élimine discrètement tous les innocents avec ton couteau.",
+  "murdercraft.role.detective.objective": "Identifie les meurtriers et abats-les avec ton pistolet. Attention au tir ami !",
+  "murdercraft.role.innocent.objective": "Survis ! Trouve le pistolet caché pour devenir Justicier, ou aide-le à identifier les meurtriers.",
+  "murdercraft.role.spectator.objective": "Observe la partie.",
+
+  "murdercraft.role.murderer.description": "Tu es un meurtrier. Tu ne sais pas qui est l'autre meurtrier. Reste discret.",
+  "murdercraft.role.detective.description": "Tu es le justicier. Tu es seul. Ton pistolet ne pardonne pas les erreurs.",
+  "murdercraft.role.innocent.description": "Tu es innocent. Reste vigilant, prévient le justicier.",
+  "murdercraft.role.spectator.description": "Tu es spectateur.",
+
+  "murdercraft.briefing.role_is": "Ton rôle : ",
+
+  "murdercraft.lobby.joined": "%s a rejoint le lobby",
+  "murdercraft.lobby.left": "%s a quitté le lobby",
+
+  "murdercraft.game.starting": "▶ La partie va démarrer !",
+  "murdercraft.game.started": "✦ La partie a commencé ! Bonne chance.",
+
+  "murdercraft.countdown.seconds": "Démarrage dans %s...",
+  "murdercraft.countdown.ten_sec": "Démarrage dans 10 secondes !",
+
+  "murdercraft.win.innocents": "✦ Les Innocents ont gagné !",
+  "murdercraft.win.murderers": "☠ Les Meurtriers ont gagné !",
+  "murdercraft.win.draw": "⚖ Match nul",
+  "murdercraft.win.canceled": "⛔ Partie annulée",
+
+  "murdercraft.end.reveal_roles": "Révélation des rôles :",
+
+  "murdercraft.event.new_detective": "⚭ %s est devenu(e) Justicier !",
+  "murdercraft.event.hidden_pistol_dropped": "⚠ Un pistolet a été dissimulé quelque part...",
+
+  "murdercraft.error.not_enough_players": "Pas assez de joueurs : %s/%s",
+
+  "murdercraft.knife.not_murderer": "Seuls les Meurtriers peuvent utiliser le couteau",
+  "murdercraft.pistol.no_game": "Aucune partie en cours",
+  "murdercraft.pistol.not_detective": "Seul le Justicier peut utiliser le pistolet",
+  "murdercraft.pistol.hit_murderer": "🎯 Tu as éliminé un Meurtrier : %s",
+  "murdercraft.pistol.friendly_fire": "⚠ Tu as tiré sur un innocent — tu perds ton arme définitivement",
+  "murdercraft.hidden_pistol.promoted": "★ Tu as ramassé le pistolet caché — tu es maintenant Justicier !",
+
+  "murdercraft.hud.role_label": "Rôle",
+  "murdercraft.hud.time": "Temps",
+  "murdercraft.hud.starting_in": "Démarrage dans %s s",
+
+  "murdercraft.phase.lobby": "Lobby",
+  "murdercraft.phase.starting": "Démarrage",
+  "murdercraft.phase.in_game": "En jeu",
+  "murdercraft.phase.ending": "Fin de partie",
+
+  "murdercraft.command.joined": "✓ Tu as rejoint le lobby MurderCraft",
+  "murdercraft.command.left": "Tu as quitté le lobby",
+  "murdercraft.command.cant_join": "Impossible de rejoindre maintenant",
+  "murdercraft.command.starting": "Démarrage de la partie...",
+  "murdercraft.command.cant_start": "Impossible de démarrer (vérifie le nombre de joueurs)",
+  "murdercraft.command.stopped": "Partie arrêtée",
+  "murdercraft.command.kicked": "%s a été retiré de la partie",
+  "murdercraft.command.config_set": "Config : %s = %s",
+
+  "murdercraft.status.phase": "Phase : %s",
+  "murdercraft.status.players": "Joueurs : %s/%s",
+  "murdercraft.status.time_left": "Temps restant : %s s",
+  "murdercraft.status.murderers_alive": "Meurtriers vivants : %s",
+  "murdercraft.status.innocents_alive": "Innocents vivants : %s",
+
+  "config.murdercraft.title": "Configuration MurderCraft",
+  "config.murdercraft.category.game": "Partie",
+  "config.murdercraft.category.roles": "Rôles",
+  "config.murdercraft.category.gameplay": "Gameplay",
+  "config.murdercraft.category.ui": "Interface",
+
+  "config.murdercraft.minPlayers": "Joueurs minimum",
+  "config.murdercraft.minPlayers.tooltip": "Nombre de joueurs requis pour lancer une partie (recommandé : 5+)",
+  "config.murdercraft.maxPlayers": "Joueurs maximum",
+  "config.murdercraft.gameDuration": "Durée de la partie (s)",
+  "config.murdercraft.countdown": "Compte à rebours de départ (s)",
+  "config.murdercraft.hiddenPistolDelay": "Délai avant pistolet caché (s)",
+  "config.murdercraft.murdererCount": "Nombre de meurtriers",
+  "config.murdercraft.detectiveCount": "Nombre de justiciers",
+  "config.murdercraft.knifeOneShot": "Couteau one-shot",
+  "config.murdercraft.detectiveLosesGun": "Justicier perd son arme sur tir ami",
+  "config.murdercraft.showNames": "Afficher les noms en jeu",
+  "config.murdercraft.showHud": "Afficher le HUD personnalisé",
+  "config.murdercraft.showSubtitles": "Afficher les sous-titres"
+}
