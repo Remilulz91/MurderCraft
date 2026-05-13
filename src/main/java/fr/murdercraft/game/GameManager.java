@@ -147,7 +147,14 @@ public class GameManager {
     private void beginInGame() {
         List<ServerPlayerEntity> players = resolveParticipants();
         roleManager.assignRoles(players);
+        finalizeStart(players);
+    }
 
+    /**
+     * Finalise le démarrage : timer + distribution items + briefing.
+     * Extrait pour pouvoir être appelé après une assignation custom (debug).
+     */
+    private void finalizeStart(List<ServerPlayerEntity> players) {
         MurderCraftConfig cfg = MurderCraftConfig.get();
         this.gameTicksLeft = cfg.gameDurationSeconds * 20;
         this.startedAt = System.currentTimeMillis();
@@ -167,6 +174,75 @@ public class GameManager {
         }
 
         broadcast(Text.translatable("murdercraft.game.started").formatted(Formatting.GREEN, Formatting.BOLD));
+    }
+
+    // ============================================================
+    // === API DEBUG (exposée pour la commande /murder debug ...) ===
+    // ============================================================
+
+    /**
+     * Démarre une partie IMMÉDIATEMENT en bypassant toutes les vérifications
+     * (countdown, min players). Si forcedRole != null, le rôle du caller est
+     * forcé après l'assignation initiale.
+     */
+    public boolean debugStart(MinecraftServer server, ServerPlayerEntity caller, Role forcedRole) {
+        if (phase != GamePhase.LOBBY) return false;
+        this.server = server;
+
+        // Auto-ajout du caller s'il n'est pas déjà dans le lobby
+        if (caller != null && !participants.contains(caller.getUuid())) {
+            participants.add(caller.getUuid());
+        }
+        if (participants.isEmpty()) return false;
+
+        List<ServerPlayerEntity> players = resolveParticipants();
+        roleManager.assignRoles(players);
+
+        // Override du rôle du caller si demandé
+        if (caller != null && forcedRole != null) {
+            roleManager.setRole(caller.getUuid(), forcedRole);
+        }
+
+        this.hiddenPistolSpawned = false;
+        finalizeStart(players);
+
+        broadcast(Text.translatable("murdercraft.debug.started").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD));
+        return true;
+    }
+
+    /** Change le rôle d'un joueur en cours de partie + lui redonne l'item correspondant. */
+    public boolean setPlayerRoleAndItems(ServerPlayerEntity player, Role role) {
+        if (!isGameActive()) return false;
+        roleManager.setRole(player.getUuid(), role);
+
+        player.getInventory().clear();
+        switch (role) {
+            case MURDERER -> player.getInventory().insertStack(new ItemStack(ModItems.KNIFE));
+            case DETECTIVE -> player.getInventory().insertStack(new ItemStack(ModItems.PISTOL));
+            default -> { /* INNOCENT : rien */ }
+        }
+
+        ModNetworking.sendRoleAssign(player, role);
+        return true;
+    }
+
+    /** Spawn immédiatement un pistolet caché à 2 blocs devant le joueur. */
+    public boolean forceSpawnHiddenPistolNear(ServerPlayerEntity player) {
+        if (player == null) return false;
+        var pos = player.getPos().add(2, 1, 0);
+        ItemStack stack = new ItemStack(ModItems.HIDDEN_PISTOL);
+        ItemEntity drop = new ItemEntity(player.getServerWorld(), pos.x, pos.y, pos.z, stack);
+        drop.setNeverDespawn();
+        drop.setGlowing(true);
+        player.getServerWorld().spawnEntity(drop);
+        hiddenPistolSpawned = true;
+        return true;
+    }
+
+    /** Force la fin de la partie avec un résultat donné. */
+    public void forceEndGame(WinResult result) {
+        if (phase == GamePhase.LOBBY) return;
+        endGame(result);
     }
 
     private void sendBriefing(ServerPlayerEntity player, Role role) {

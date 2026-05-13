@@ -93,5 +93,16 @@
   "config.murdercraft.detectiveLosesGun": "Detective loses gun on friendly fire",
   "config.murdercraft.showNames": "Show names in-game",
   "config.murdercraft.showHud": "Show custom HUD",
-  "config.murdercraft.showSubtitles": "Show subtitles"
+  "config.murdercraft.showSubtitles": "Show subtitles",
+
+  "murdercraft.debug.started": "⚠ [DEBUG] Game started in test mode (min players bypassed)",
+  "murdercraft.debug.start.success": "[DEBUG] Game started — forced role: %s",
+  "murdercraft.debug.start.fail": "[DEBUG] Cannot start (is a game already in progress?)",
+  "murdercraft.debug.invalid_role": "[DEBUG] Invalid role. Use: murderer, detective or innocent",
+  "murdercraft.debug.setrole.success": "[DEBUG] Your role is now: ",
+  "murdercraft.debug.setrole.fail": "[DEBUG] Failed — no active game",
+  "murdercraft.debug.giveitem.success": "[DEBUG] Item given: %s",
+  "murdercraft.debug.spawnpistol.success": "[DEBUG] Hidden pistol spawned in front of you",
+  "murdercraft.debug.spawnpistol.fail": "[DEBUG] Error spawning the pistol",
+  "murdercraft.debug.endwith.success": "[DEBUG] Game ended with result: %s"
 }

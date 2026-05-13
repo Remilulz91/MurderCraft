@@ -62,6 +62,8 @@ public class MurderCommand {
                         .requires(src -> src.hasPermissionLevel(2))
                         .then(CommandManager.argument("player", EntityArgumentType.player())
                                 .executes(MurderCommand::onKick)))
+                // Sous-commande debug (OP requis, voir DebugCommand.java)
+                .then(DebugCommand.build())
         );
     }
 

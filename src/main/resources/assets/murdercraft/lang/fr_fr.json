@@ -93,5 +93,16 @@
   "config.murdercraft.detectiveLosesGun": "Justicier perd son arme sur tir ami",
   "config.murdercraft.showNames": "Afficher les noms en jeu",
   "config.murdercraft.showHud": "Afficher le HUD personnalisé",
-  "config.murdercraft.showSubtitles": "Afficher les sous-titres"
+  "config.murdercraft.showSubtitles": "Afficher les sous-titres",
+
+  "murdercraft.debug.started": "⚠ [DEBUG] Partie démarrée en mode test (bypass minimum joueurs)",
+  "murdercraft.debug.start.success": "[DEBUG] Partie démarrée — rôle forcé : %s",
+  "murdercraft.debug.start.fail": "[DEBUG] Impossible de démarrer (une partie est-elle déjà en cours ?)",
+  "murdercraft.debug.invalid_role": "[DEBUG] Rôle invalide. Utilise : murderer, detective ou innocent",
+  "murdercraft.debug.setrole.success": "[DEBUG] Ton rôle est maintenant : ",
+  "murdercraft.debug.setrole.fail": "[DEBUG] Impossible — aucune partie active",
+  "murdercraft.debug.giveitem.success": "[DEBUG] Item donné : %s",
+  "murdercraft.debug.spawnpistol.success": "[DEBUG] Pistolet caché spawné devant toi",
+  "murdercraft.debug.spawnpistol.fail": "[DEBUG] Erreur lors du spawn du pistolet",
+  "murdercraft.debug.endwith.success": "[DEBUG] Partie terminée avec le résultat : %s"
 }
