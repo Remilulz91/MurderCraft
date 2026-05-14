@@ -4,19 +4,22 @@ plugins {
     id 'me.modmuss50.mod-publish-plugin' version '0.7.4'
 }
 
-version = project.mod_version
 group = project.maven_group
 
 // Build type: 'public' (default, debug commands OFF) or 'debug' (debug commands ON)
 // Usage: ./gradlew build                   → public build
-//        ./gradlew build -PbuildType=debug → debug build (separate JAR with -debug suffix)
+//        ./gradlew build -PbuildType=debug → debug build (separate JAR with -debug version suffix)
 def buildType = project.findProperty('buildType') ?: 'public'
-def archivesName = buildType == 'debug'
-        ? "${project.archives_base_name}-debug"
-        : project.archives_base_name
+
+// Adding "-debug" to the version forces Gradle/Loom to produce a different filename:
+//   - public: murdercraft-0.5.0-beta.1.jar
+//   - debug:  murdercraft-0.5.0-beta.1-debug.jar
+version = buildType == 'debug'
+        ? "${project.mod_version}-debug"
+        : project.mod_version
 
 base {
-    archivesName = archivesName
+    archivesName = project.archives_base_name
 }
 
 println "==> Building MurderCraft v${version} (type: ${buildType})"
