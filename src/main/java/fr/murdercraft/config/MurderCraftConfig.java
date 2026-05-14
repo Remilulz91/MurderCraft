@@ -116,13 +116,33 @@ public class MurderCraftConfig {
                 if (loaded != null) {
                     INSTANCE = loaded;
                 }
-                MurderCraft.LOGGER.info("[Config] Configuration chargée depuis {}", CONFIG_PATH);
+                MurderCraft.LOGGER.info("[Config] Configuration loaded from {}", CONFIG_PATH);
             } else {
                 save();
-                MurderCraft.LOGGER.info("[Config] Configuration par défaut créée");
+                MurderCraft.LOGGER.info("[Config] Default configuration created");
             }
         } catch (IOException e) {
-            MurderCraft.LOGGER.error("[Config] Erreur lors du chargement : {}", e.getMessage());
+            MurderCraft.LOGGER.error("[Config] Loading error: {}", e.getMessage());
+        }
+
+        // SECURITY: in PUBLIC builds, debug flags are FORCED to false at runtime
+        // regardless of what the config file contains. This prevents anyone from
+        // bypassing the public/debug build distinction by editing the JSON.
+        // To use debug features, the DEBUG build must be installed instead.
+        if (!MurderCraft.isDebugBuild()) {
+            boolean wasModified = false;
+            if (INSTANCE.enableDebugCommands) {
+                INSTANCE.enableDebugCommands = false;
+                wasModified = true;
+            }
+            if (INSTANCE.debugAllowMobDamage) {
+                INSTANCE.debugAllowMobDamage = false;
+                wasModified = true;
+            }
+            if (wasModified) {
+                MurderCraft.LOGGER.warn("[Config] ⚠ Debug flags found in config file but this is a PUBLIC build —");
+                MurderCraft.LOGGER.warn("[Config] ⚠ they are IGNORED. To use debug features, install the DEBUG build.");
+            }
         }
     }
 

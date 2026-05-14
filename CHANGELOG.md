@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.0-beta.2] - Config security fix
+
+### Security
+- **Debug flags are now ignored in PUBLIC builds** even if set to `true` in the config
+  file. Previously, a server admin could edit `config/murdercraft.json` to set
+  `enableDebugCommands: true` or `debugAllowMobDamage: true` and effectively turn
+  the public build into a debug build. Now, the public build is truly locked down.
+- A warning is logged on startup if the config file contains debug flags but they
+  are being ignored.
+
+### Changed
+- The "Debug" category in the Mod Menu config screen is now hidden in PUBLIC builds
+  (only visible in DEBUG builds).
+
 ## [0.5.0-beta.1] - First public beta release
 
 This is the **first public beta** of MurderCraft. The mod is feature-complete

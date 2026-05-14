@@ -2,6 +2,7 @@ package fr.murdercraft.client.config;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
+import fr.murdercraft.MurderCraft;
 import fr.murdercraft.config.MurderCraftConfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -95,13 +96,15 @@ public class ModMenuIntegration implements ModMenuApi {
                     .setDefaultValue(true)
                     .setSaveConsumer(v -> cfg.showSubtitles = v).build());
 
-            // === Catégorie : Debug (à désactiver pour la prod) ===
-            ConfigCategory debug = builder.getOrCreateCategory(Text.translatable("config.murdercraft.category.debug"));
+            // === Catégorie : Debug — uniquement visible en build DEBUG ===
+            if (MurderCraft.isDebugBuild()) {
+                ConfigCategory debug = builder.getOrCreateCategory(Text.translatable("config.murdercraft.category.debug"));
 
-            debug.addEntry(entry.startBooleanToggle(Text.translatable("config.murdercraft.debugAllowMobDamage"), cfg.debugAllowMobDamage)
-                    .setDefaultValue(false)
-                    .setTooltip(Text.translatable("config.murdercraft.debugAllowMobDamage.tooltip"))
-                    .setSaveConsumer(v -> cfg.debugAllowMobDamage = v).build());
+                debug.addEntry(entry.startBooleanToggle(Text.translatable("config.murdercraft.debugAllowMobDamage"), cfg.debugAllowMobDamage)
+                        .setDefaultValue(false)
+                        .setTooltip(Text.translatable("config.murdercraft.debugAllowMobDamage.tooltip"))
+                        .setSaveConsumer(v -> cfg.debugAllowMobDamage = v).build());
+            }
 
             return builder.build();
         };
