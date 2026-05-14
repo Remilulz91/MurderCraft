@@ -71,9 +71,22 @@ public class PistolItem extends Item {
             }
         }
 
-        // Effets visuels et sonores
+        // Effets visuels et sonores — combo de 2 sons pour un meilleur "bang"
         world.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
-                SoundEvents.ENTITY_FIREWORK_ROCKET_BLAST, shooter.getSoundCategory(), 1.0f, 1.5f);
+                SoundEvents.ENTITY_GENERIC_EXPLODE.value(), shooter.getSoundCategory(), 0.4f, 2.0f);
+        world.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
+                SoundEvents.ITEM_FIRECHARGE_USE, shooter.getSoundCategory(), 1.0f, 1.2f);
+
+        // Muzzle flash : particules de fumée devant le shooter
+        if (shooter.getServerWorld() != null) {
+            Vec3d eye = shooter.getCameraPosVec(1.0f);
+            Vec3d dir = shooter.getRotationVec(1.0f);
+            Vec3d muzzle = eye.add(dir.multiply(0.6)).add(0, -0.2, 0);
+            shooter.getServerWorld().spawnParticles(ParticleTypes.SMOKE,
+                    muzzle.x, muzzle.y, muzzle.z, 8, 0.05, 0.05, 0.05, 0.05);
+            shooter.getServerWorld().spawnParticles(ParticleTypes.FLAME,
+                    muzzle.x, muzzle.y, muzzle.z, 3, 0.02, 0.02, 0.02, 0.02);
+        }
 
         // Raycast (joueurs + mobs si debug)
         Entity hit = raycast(world, shooter, debugMobDamage);
@@ -120,9 +133,10 @@ public class PistolItem extends Item {
         victim.damage(victim.getDamageSources().playerAttack(shooter), Float.MAX_VALUE);
 
         if (victimRole == Role.MURDERER) {
-            // Bon tir
+            // Bon tir — feedback fort
             shooter.sendMessage(Text.translatable("murdercraft.pistol.hit_murderer", victim.getName())
                     .formatted(Formatting.GREEN), false);
+            shooter.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, shooter.getSoundCategory(), 0.6f, 1.5f);
         } else {
             // Tir sur innocent ou autre — le pistolet tombe au sol (ramassable par innocents seulement)
             if (MurderCraftConfig.get().detectiveLosesGunOnFriendlyFire) {

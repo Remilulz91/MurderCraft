@@ -31,8 +31,7 @@ public class KnifeItem extends Item {
             // [DEBUG] One-shot les mobs si le flag est activé (peu importe le rôle)
             if (cfg.debugAllowMobDamage && !(target instanceof ServerPlayerEntity)) {
                 target.damage(target.getDamageSources().playerAttack(attackerPlayer), Float.MAX_VALUE);
-                attackerPlayer.playSoundToPlayer(SoundEvents.BLOCK_LAVA_EXTINGUISH,
-                        attackerPlayer.getSoundCategory(), 0.4f, 1.5f);
+                playKnifeSound(attackerPlayer);
                 attackerPlayer.sendMessage(Text.translatable("murdercraft.debug.mob_hit", target.getName())
                         .formatted(net.minecraft.util.Formatting.LIGHT_PURPLE), true);
                 return true;
@@ -46,9 +45,15 @@ public class KnifeItem extends Item {
                             // One-shot
                             victim.damage(victim.getDamageSources().playerAttack(attackerPlayer), Float.MAX_VALUE);
                         }
-                        // Son discret pour le meurtrier
-                        attackerPlayer.playSoundToPlayer(SoundEvents.BLOCK_LAVA_EXTINGUISH,
-                                attackerPlayer.getSoundCategory(), 0.4f, 1.5f);
+                        // Combo de sons pour un "stab" plus brutal
+                        playKnifeSound(attackerPlayer);
+                        // Particules de sang à l'impact (visible par tous)
+                        if (victim.getServerWorld() != null) {
+                            victim.getServerWorld().spawnParticles(
+                                    net.minecraft.particle.ParticleTypes.DAMAGE_INDICATOR,
+                                    victim.getX(), victim.getY() + 1.0, victim.getZ(),
+                                    20, 0.3, 0.5, 0.3, 0.1);
+                        }
                     }
                 }
             } else {
@@ -65,5 +70,11 @@ public class KnifeItem extends Item {
     public boolean canMine(net.minecraft.block.BlockState state, net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos, PlayerEntity miner) {
         // Le couteau ne casse pas les blocs
         return false;
+    }
+
+    /** Combo de sons "stab" — utilisé pour tous les kills au couteau. */
+    private void playKnifeSound(ServerPlayerEntity attacker) {
+        attacker.playSoundToPlayer(SoundEvents.ITEM_TRIDENT_HIT, attacker.getSoundCategory(), 0.5f, 1.4f);
+        attacker.playSoundToPlayer(SoundEvents.BLOCK_WOOL_BREAK, attacker.getSoundCategory(), 0.6f, 0.7f);
     }
 }

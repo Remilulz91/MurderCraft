@@ -7,6 +7,8 @@ import fr.murdercraft.network.ModNetworking;
 import fr.murdercraft.roles.Role;
 import fr.murdercraft.roles.RoleManager;
 import fr.murdercraft.tasks.TaskManager;
+import fr.murdercraft.util.TitleUtil;
+import net.minecraft.particle.ParticleTypes;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
@@ -175,6 +177,17 @@ public class GameManager {
 
         broadcast(Text.translatable("murdercraft.round.starting", currentRound, cfg.maxRounds)
                 .formatted(Formatting.GOLD, Formatting.BOLD));
+
+        // Title à tous : "Round X/Y"
+        if (server != null) {
+            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                TitleUtil.sendTitle(p,
+                        Text.translatable("murdercraft.hud.round", currentRound, cfg.maxRounds)
+                                .formatted(Formatting.GOLD, Formatting.BOLD),
+                        Text.translatable("murdercraft.round.preparing").formatted(Formatting.YELLOW),
+                        10, 50, 15);
+            }
+        }
         return true;
     }
 
@@ -405,12 +418,49 @@ public class GameManager {
                 Integer.MAX_VALUE, p.getInventory());
     }
 
+    /**
+     * Awareness des meurtriers : chaque meurtrier voit des particules SOUL au-dessus
+     * de la tête des autres meurtriers. Ces particules sont envoyées en privé via
+     * spawnParticles(ServerPlayerEntity, ...) — invisibles pour les autres joueurs.
+     */
+    private void sendMurdererAwareness() {
+        if (server == null) return;
+        List<UUID> murderers = roleManager.getPlayersByRole(Role.MURDERER);
+        if (murderers.size() < 2) return;
+
+        for (UUID viewerId : murderers) {
+            ServerPlayerEntity viewer = server.getPlayerManager().getPlayer(viewerId);
+            if (viewer == null || !roleManager.isAlive(viewer)) continue;
+            for (UUID otherId : murderers) {
+                if (otherId.equals(viewerId)) continue;
+                ServerPlayerEntity other = server.getPlayerManager().getPlayer(otherId);
+                if (other == null || !roleManager.isAlive(other)) continue;
+                // Particules SOUL en privé — visible uniquement par le viewer
+                viewer.getServerWorld().spawnParticles(
+                        viewer,
+                        ParticleTypes.SOUL_FIRE_FLAME,
+                        true,
+                        other.getX(), other.getY() + 2.4, other.getZ(),
+                        3,
+                        0.2, 0.1, 0.2,
+                        0.01
+                );
+            }
+        }
+    }
+
     /** Indique si le mode debug est activé (pour la commande /murder debug info). */
     public boolean isDebugMode() {
         return debugMode;
     }
 
     private void sendBriefing(ServerPlayerEntity player, Role role) {
+        // Title dramatique : ton rôle
+        TitleUtil.sendDramaticTitle(player,
+                Text.translatable("murdercraft.briefing.title").formatted(Formatting.WHITE, Formatting.BOLD),
+                role.getDisplayName().copy().formatted(Formatting.BOLD));
+
+        // Message détaillé en chat (objectif)
         player.sendMessage(Text.empty(), false);
         player.sendMessage(Text.literal("═══════════════════════").formatted(Formatting.GOLD), false);
         player.sendMessage(Text.translatable("murdercraft.briefing.role_is").append(role.getDisplayName()), false);
@@ -418,8 +468,12 @@ public class GameManager {
         player.sendMessage(Text.literal("═══════════════════════").formatted(Formatting.GOLD), false);
         player.sendMessage(Text.empty(), false);
 
-        // Son de début
-        player.playSoundToPlayer(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.MASTER, 0.6f, 1.0f);
+        // Son selon le rôle pour une meilleure ambiance
+        switch (role) {
+            case MURDERER -> player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_AMBIENT, SoundCategory.MASTER, 0.4f, 1.8f);
+            case DETECTIVE -> player.playSoundToPlayer(SoundEvents.BLOCK_BELL_USE, SoundCategory.MASTER, 0.8f, 1.0f);
+            default -> player.playSoundToPlayer(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.MASTER, 0.6f, 1.0f);
+        }
     }
 
     /** Promeut un innocent en détective (cas du pistolet caché ramassé). */
@@ -530,10 +584,22 @@ public class GameManager {
             this.awaitingNextRound = false;
         }
 
-        // Notifier les clients
+        // Notifier les clients + envoyer un title dramatique
         if (server != null) {
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
                 ModNetworking.sendGameState(p, GamePhase.ENDING, 0, result);
+                TitleUtil.sendDramaticTitle(p,
+                        result.getDisplayText(),
+                        Text.translatable("murdercraft.round.result.subtitle",
+                                currentRound, cfg.maxRounds,
+                                sessionInnocentWins, sessionMurdererWins).formatted(Formatting.AQUA));
+
+                // Son selon le résultat
+                switch (result) {
+                    case INNOCENTS_WIN -> p.playSoundToPlayer(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.MASTER, 1.0f, 1.0f);
+                    case MURDERERS_WIN -> p.playSoundToPlayer(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.MASTER, 0.6f, 1.5f);
+                    case DRAW, CANCELED -> p.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS, SoundCategory.MASTER, 1.0f, 0.5f);
+                }
             }
         }
     }
@@ -599,6 +665,11 @@ public class GameManager {
                 // Vérification d'inventaire 2x par seconde (règles pistolet)
                 if (gameTicksLeft % 10 == 0) {
                     checkInventoryRules();
+                }
+
+                // Awareness meurtriers : toutes les 2s, particules privées entre meurtriers
+                if (gameTicksLeft % 40 == 0) {
+                    sendMurdererAwareness();
                 }
 
                 // Tick TaskManager (vérifie complétion + décrémente fenêtres de révélation)

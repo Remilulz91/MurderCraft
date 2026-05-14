@@ -3,8 +3,11 @@ package fr.murdercraft.tasks;
 import fr.murdercraft.MurderCraft;
 import fr.murdercraft.game.GameManager;
 import fr.murdercraft.roles.Role;
+import fr.murdercraft.util.TitleUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -121,16 +124,24 @@ public class TaskManager {
         ServerPlayerEntity winner = server.getPlayerManager().getPlayer(winnerId);
         if (winner == null) return;
 
+        // Annonce publique aux participants
         broadcastToParticipants(server,
                 Text.translatable("murdercraft.task.completed_by", winner.getName().getString())
                         .formatted(Formatting.GOLD, Formatting.BOLD));
 
         // Donne au gagnant une fenêtre de révélation
         pendingReveals.put(winnerId, REVEAL_WINDOW_TICKS);
-        winner.sendMessage(Text.translatable("murdercraft.task.reveal_granted")
-                .formatted(Formatting.GOLD, Formatting.BOLD), false);
+
+        // Title dramatique au gagnant
+        TitleUtil.sendDramaticTitle(winner,
+                Text.translatable("murdercraft.task.you_won").formatted(Formatting.GOLD, Formatting.BOLD),
+                Text.translatable("murdercraft.task.reveal_granted").formatted(Formatting.YELLOW));
+
         winner.sendMessage(Text.translatable("murdercraft.task.reveal_usage")
                 .formatted(Formatting.YELLOW), false);
+        // Son de victoire
+        winner.playSoundToPlayer(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE,
+                SoundCategory.MASTER, 1.0f, 1.0f);
 
         currentTask.cleanup(server);
     }

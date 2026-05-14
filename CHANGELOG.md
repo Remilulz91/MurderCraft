@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0] - Phase C - Polish & juiciness
+
+### Added
+- **Title overlays** on screen for: role assignment, round start, end of round, task completion
+- **Murderer awareness**: subtle soul-flame particles appear above other murderers, visible only to fellow murderers — finally lets the murderer team coordinate
+- **Better gunshot effects**: combo of 2 sounds + muzzle flash particles (smoke + flame) for a real "bang" feel
+- **Better knife effects**: combo of 2 sounds + blood particles at impact point
+- **Role-specific briefing sounds**: wither ambient for murderer, bell for detective, toast for innocents
+- **End-of-round sounds**: triumphant sound for innocent wins, wither death for murderer wins
+- **Kill confirm sound** for detective when shooting a murderer (level-up sound)
+- **Security flag** `enableDebugCommands` in config — disable to prevent OPs from cheating with `/murder debug` on production servers
+
+### Changed
+- Pistol sound is now a layered explosion + firecharge (was firework rocket)
+- Knife sound is now trident hit + wool break (was lava extinguish)
+
 ## [0.3.0] - Phase B - Tasks & Reveal mechanic
 
 ### Added

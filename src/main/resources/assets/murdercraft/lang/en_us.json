@@ -23,6 +23,10 @@
   "murdercraft.role.spectator.description": "You are a spectator.",
 
   "murdercraft.briefing.role_is": "Your role: ",
+  "murdercraft.briefing.title": "Your role",
+  "murdercraft.round.preparing": "Preparing...",
+  "murdercraft.round.result.subtitle": "Round %s/%s · Innocents %s | Murderers %s",
+  "murdercraft.task.you_won": "★ Task completed!",
 
   "murdercraft.lobby.joined": "%s joined the lobby",
   "murdercraft.lobby.left": "%s left the lobby",

@@ -95,6 +95,12 @@ public class MurderCraftConfig {
      */
     public boolean debugAllowMobDamage = false;
 
+    /**
+     * [DEBUG] Active les commandes /murder debug ... — à DÉSACTIVER pour la prod.
+     * Sans cela, n'importe quel admin/OP de serveur pourrait cheat avec /murder debug.
+     */
+    public boolean enableDebugCommands = true;
+
     // === Méthodes ===
 
     public static MurderCraftConfig get() {

@@ -48,7 +48,9 @@ public class DebugCommand {
      */
     public static LiteralArgumentBuilder<ServerCommandSource> build() {
         return CommandManager.literal("debug")
-                .requires(src -> src.hasPermissionLevel(2))
+                // Double condition : OP (level 2) ET flag enableDebugCommands dans la config
+                .requires(src -> src.hasPermissionLevel(2)
+                        && MurderCraftConfig.get().enableDebugCommands)
 
                 // start [role]
                 .then(CommandManager.literal("start")
