@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0] - Phase B - Tasks & Reveal mechanic
+
+### Added
+- **Task system** activated from round 3 onwards
+- **Exploration Task**: a glowing chest with a Mystery Token spawns 15-40 blocks from a random participant. First to grab the token wins a clue.
+- **Crafting Task**: a random recipe (torch, ladder, bread, etc.) is announced. First to craft the target wins a clue.
+- **Mystery Token** new item with custom golden texture
+- **Reveal mechanic**: task winner gets a 30-second window to use `/murder task reveal <player>` to learn that player's role (privately)
+- New command `/murder task reveal <player>`
+
+### Fixed
+- **Time-out win condition**: when the timer expires with surviving innocents, INNOCENTS WIN (was incorrectly: murderers win). Matches official GMod Murder rules.
+
 ## [0.2.0] - Phase A - Authentic GMod Murder rules
 
 ### Added

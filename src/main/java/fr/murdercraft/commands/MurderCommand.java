@@ -9,6 +9,7 @@ import fr.murdercraft.config.MurderCraftConfig;
 import fr.murdercraft.game.GameManager;
 import fr.murdercraft.game.GamePhase;
 import fr.murdercraft.roles.Role;
+import fr.murdercraft.tasks.TaskManager;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -62,9 +63,21 @@ public class MurderCommand {
                         .requires(src -> src.hasPermissionLevel(2))
                         .then(CommandManager.argument("player", EntityArgumentType.player())
                                 .executes(MurderCommand::onKick)))
+                // /murder task reveal <player> — utilisé par le gagnant d'une tâche pour révéler un rôle
+                .then(CommandManager.literal("task")
+                        .then(CommandManager.literal("reveal")
+                                .then(CommandManager.argument("player", EntityArgumentType.player())
+                                        .executes(MurderCommand::onTaskReveal))))
                 // Sous-commande debug (OP requis, voir DebugCommand.java)
                 .then(DebugCommand.build())
         );
+    }
+
+    private static int onTaskReveal(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
+        ServerPlayerEntity requester = ctx.getSource().getPlayerOrThrow();
+        ServerPlayerEntity target = EntityArgumentType.getPlayer(ctx, "player");
+        boolean ok = TaskManager.get().tryReveal(requester, target);
+        return ok ? 1 : 0;
     }
 
     private static int onJoin(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {

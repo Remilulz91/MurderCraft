@@ -40,6 +40,15 @@ public class ModItems {
                     .fireproof())
     );
 
+    /** Mystery Token : item de récompense des tâches (donne le droit à un indice). */
+    public static final Item MYSTERY_TOKEN = register(
+            "mystery_token",
+            new Item(new Item.Settings()
+                    .maxCount(1)
+                    .rarity(Rarity.EPIC)
+                    .fireproof())
+    );
+
     private static Item register(String id, Item item) {
         return Registry.register(
                 Registries.ITEM,
@@ -56,6 +65,7 @@ public class ModItems {
             entries.add(KNIFE);
             entries.add(PISTOL);
             entries.add(HIDDEN_PISTOL);
+            entries.add(MYSTERY_TOKEN);
         });
     }
 }

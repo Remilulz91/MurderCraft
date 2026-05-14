@@ -5,6 +5,7 @@
   "item.murdercraft.knife": "Couteau du Meurtrier",
   "item.murdercraft.pistol": "Pistolet du Justicier",
   "item.murdercraft.hidden_pistol": "Pistolet Caché",
+  "item.murdercraft.mystery_token": "Mystery Token",
 
   "murdercraft.role.murderer": "Meurtrier",
   "murdercraft.role.detective": "Justicier",
@@ -37,6 +38,17 @@
   "murdercraft.round.result": "Manche %s/%s — Score : Innocents %s | Meurtriers %s",
   "murdercraft.murderer.cannot_take_pistol": "⛔ Les meurtriers ne peuvent pas garder un pistolet — il est tombé au sol",
   "murdercraft.hud.round": "Manche %s/%s",
+
+  "murdercraft.task.exploration.description": "EXPLORATION — Un coffre brillant est apparu quelque part. Le premier à récupérer le Mystery Token gagne un indice !",
+  "murdercraft.task.crafting.description": "CRAFTING — Le premier joueur à fabriquer ce qui suit gagne un indice : %s",
+  "murdercraft.task.reward_hint": "Récompense : un indice sur le rôle d'un autre joueur (privé)",
+  "murdercraft.task.completed_by": "⚡ %s a réussi la tâche !",
+  "murdercraft.task.reveal_granted": "★ Tu as 30 secondes pour révéler le rôle d'un joueur.",
+  "murdercraft.task.reveal_usage": "Utilise : /murder task reveal <joueur>",
+  "murdercraft.task.reveal_expired": "✦ Ton droit de révélation a expiré.",
+  "murdercraft.task.reveal_no_window": "Tu n'as pas (ou plus) de droit de révélation actif.",
+  "murdercraft.task.reveal_not_self": "Tu ne peux pas te révéler ton propre rôle.",
+  "murdercraft.task.reveal_result": "Le rôle de %s est : ",
 
   "murdercraft.countdown.seconds": "Démarrage dans %s...",
   "murdercraft.countdown.ten_sec": "Démarrage dans 10 secondes !",

@@ -5,6 +5,7 @@
   "item.murdercraft.knife": "Murderer's Knife",
   "item.murdercraft.pistol": "Detective's Pistol",
   "item.murdercraft.hidden_pistol": "Hidden Pistol",
+  "item.murdercraft.mystery_token": "Mystery Token",
 
   "murdercraft.role.murderer": "Murderer",
   "murdercraft.role.detective": "Detective",
@@ -37,6 +38,17 @@
   "murdercraft.round.result": "Round %s/%s — Score: Innocents %s | Murderers %s",
   "murdercraft.murderer.cannot_take_pistol": "⛔ Murderers cannot keep a pistol — it has been dropped",
   "murdercraft.hud.round": "Round %s/%s",
+
+  "murdercraft.task.exploration.description": "EXPLORATION — A glowing chest has appeared somewhere. First to grab the Mystery Token wins a clue!",
+  "murdercraft.task.crafting.description": "CRAFTING — First player to craft this wins a clue: %s",
+  "murdercraft.task.reward_hint": "Reward: a private clue about another player's role",
+  "murdercraft.task.completed_by": "⚡ %s completed the task!",
+  "murdercraft.task.reveal_granted": "★ You have 30 seconds to reveal a player's role.",
+  "murdercraft.task.reveal_usage": "Use: /murder task reveal <player>",
+  "murdercraft.task.reveal_expired": "✦ Your reveal window has expired.",
+  "murdercraft.task.reveal_no_window": "You don't have (or no longer have) an active reveal window.",
+  "murdercraft.task.reveal_not_self": "You can't reveal your own role to yourself.",
+  "murdercraft.task.reveal_result": "%s's role is: ",
 
   "murdercraft.countdown.seconds": "Starting in %s...",
   "murdercraft.countdown.ten_sec": "Starting in 10 seconds!",

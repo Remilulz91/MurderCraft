@@ -6,6 +6,7 @@ import fr.murdercraft.items.ModItems;
 import fr.murdercraft.network.ModNetworking;
 import fr.murdercraft.roles.Role;
 import fr.murdercraft.roles.RoleManager;
+import fr.murdercraft.tasks.TaskManager;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
@@ -261,6 +262,9 @@ public class GameManager {
         }
 
         broadcast(Text.translatable("murdercraft.game.started").formatted(Formatting.GREEN, Formatting.BOLD));
+
+        // Démarre une tâche si c'est la manche 3+ (système de Phase B)
+        TaskManager.get().onRoundStart(server, currentRound);
     }
 
     // ============================================================
@@ -550,6 +554,9 @@ public class GameManager {
         this.sessionInnocentWins = 0;
         this.awaitingNextRound = false;
 
+        // Reset tasks
+        TaskManager.get().cleanup(server);
+
         // Restaurer les joueurs
         if (server != null) {
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
@@ -594,6 +601,9 @@ public class GameManager {
                     checkInventoryRules();
                 }
 
+                // Tick TaskManager (vérifie complétion + décrémente fenêtres de révélation)
+                TaskManager.get().tick(server);
+
                 // Mise à jour du HUD client toutes les secondes
                 if (gameTicksLeft % 20 == 0) {
                     if (server != null) {
@@ -609,9 +619,9 @@ public class GameManager {
                 checkWinConditions();
 
                 if (phase == GamePhase.IN_GAME && gameTicksLeft <= 0) {
-                    // Temps écoulé : les meurtriers gagnent (puisqu'ils n'ont pas été tués)
-                    int murderersAlive = roleManager.countAliveByRole(Role.MURDERER);
-                    endGame(murderersAlive > 0 ? WinResult.MURDERERS_WIN : WinResult.INNOCENTS_WIN);
+                    // Temps écoulé : les meurtriers ont échoué à tuer tout le monde
+                    // → les innocents gagnent (règle officielle GMod Murder)
+                    endGame(WinResult.INNOCENTS_WIN);
                 }
             }
             case ENDING -> {
