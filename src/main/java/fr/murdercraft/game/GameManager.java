@@ -66,6 +66,10 @@ public class GameManager {
     private boolean inSession = false;
     private boolean awaitingNextRound = false;
 
+    /** Cooldown anti-spam pour l'éjection de pistolet (par joueur). */
+    private final Map<UUID, Long> lastPistolEjection = new HashMap<>();
+    private static final long EJECTION_COOLDOWN_MS = 3000;
+
     public int getCurrentRound() {
         return currentRound;
     }
@@ -383,12 +387,19 @@ public class GameManager {
                 p.getInventory().insertStack(new ItemStack(ModItems.PISTOL));
                 promoteToDetective(p);
             }
-            // Meurtrier avec un pistolet → on lui retire et drop au sol
+            // Meurtrier avec un pistolet → on lui retire
             else if (role == Role.MURDERER && hasAnyPistol(p)) {
                 removeAllPistols(p);
-                dropHiddenPistolAt(p);
-                p.sendMessage(Text.translatable("murdercraft.murderer.cannot_take_pistol")
-                        .formatted(Formatting.RED), true);
+                long now = System.currentTimeMillis();
+                Long last = lastPistolEjection.get(p.getUuid());
+                if (last == null || now - last > EJECTION_COOLDOWN_MS) {
+                    // Première éjection (ou cooldown expiré) : jette le pistolet au loin
+                    throwHiddenPistolAwayFrom(p);
+                    lastPistolEjection.put(p.getUuid(), now);
+                    p.sendMessage(Text.translatable("murdercraft.murderer.cannot_take_pistol")
+                            .formatted(Formatting.RED), true);
+                }
+                // Sinon : retrait silencieux pour éviter le spam (le pistolet déjà jeté est encore au sol)
             }
         }
     }
@@ -401,6 +412,27 @@ public class GameManager {
                 player.getX(), player.getY() + 0.5, player.getZ(), stack);
         drop.setNeverDespawn();
         drop.setGlowing(true);
+        drop.setPickupDelay(20); // 1s grace period
+        player.getServerWorld().spawnEntity(drop);
+    }
+
+    /**
+     * Jette le pistolet AU LOIN du joueur (utilisé quand un meurtrier le ramasse
+     * involontairement). Pickup delay de 3s + vitesse vers l'avant pour éviter
+     * la boucle infinie de pickup/drop.
+     */
+    public void throwHiddenPistolAwayFrom(ServerPlayerEntity player) {
+        if (player == null || player.getServerWorld() == null) return;
+        var dir = player.getRotationVec(1.0f).normalize();
+        var throwPos = player.getEyePos().add(dir.multiply(0.8));
+        ItemStack stack = new ItemStack(ModItems.HIDDEN_PISTOL);
+        ItemEntity drop = new ItemEntity(player.getServerWorld(),
+                throwPos.x, throwPos.y, throwPos.z, stack);
+        // Force d'éjection vers l'avant (style "jeter loin")
+        drop.setVelocity(dir.x * 0.6, 0.3, dir.z * 0.6);
+        drop.setNeverDespawn();
+        drop.setGlowing(true);
+        drop.setPickupDelay(60); // 3s avant ramassage possible
         player.getServerWorld().spawnEntity(drop);
     }
 
@@ -622,6 +654,9 @@ public class GameManager {
 
         // Reset tasks
         TaskManager.get().cleanup(server);
+
+        // Reset cooldown éjection pistolet
+        lastPistolEjection.clear();
 
         // Restaurer les joueurs
         if (server != null) {

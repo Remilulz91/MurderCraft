@@ -65,32 +65,64 @@ public class MurderHud {
         int round = MurderCraftClientState.getCurrentRound();
         int maxRounds = MurderCraftClientState.getMaxRounds();
 
-        int rx = 8, ry = 8;
+        // === Scoreboard style à droite, centré verticalement ===
+        // Header + lignes d'info
+        Text header = Text.literal("MurderCraft").formatted(Formatting.GOLD, Formatting.BOLD);
 
-        // === Coin haut-gauche : manche (si en session) ===
+        java.util.List<Text> lines = new java.util.ArrayList<>();
+
         if (round > 0 && maxRounds > 0) {
-            Text roundText = Text.translatable("murdercraft.hud.round", round, maxRounds)
-                    .formatted(Formatting.GOLD, Formatting.BOLD);
-            drawPanel(ctx, rx - 4, ry - 3, tr.getWidth(roundText) + 8, 12);
-            ctx.drawText(tr, roundText, rx, ry, ACCENT_COLOR, true);
-            ry += 14;
+            lines.add(Text.translatable("murdercraft.hud.round", round, maxRounds)
+                    .formatted(Formatting.YELLOW));
         }
 
-        // === Coin haut-gauche : rôle ===
-        Text roleText = Text.translatable("murdercraft.hud.role_label")
-                .append(": ")
-                .append(role.getDisplayName());
-        drawPanel(ctx, rx - 4, ry - 3, tr.getWidth(roleText) + 8, 12);
-        ctx.drawText(tr, roleText, rx, ry, PRIMARY_COLOR, true);
+        lines.add(Text.translatable("murdercraft.hud.role_label").append(": ")
+                .append(role.getDisplayName()));
 
-        // === Coin haut-gauche : timer (sous le rôle) ===
         String timeStr = formatTime(sec);
-        Text timeText = Text.translatable("murdercraft.hud.time").append(": ").append(timeStr);
-        int ty = ry + 14;
         Formatting timeColor = sec <= 30 ? Formatting.RED : (sec <= 60 ? Formatting.GOLD : Formatting.WHITE);
-        Text colored = Text.literal(timeText.getString()).formatted(timeColor);
-        drawPanel(ctx, rx - 4, ty - 3, tr.getWidth(colored) + 8, 12);
-        ctx.drawText(tr, colored, rx, ty, 0xFFFFFFFF, true);
+        lines.add(Text.translatable("murdercraft.hud.time").append(": ")
+                .append(Text.literal(timeStr).formatted(timeColor)));
+
+        // Calcul largeur du panel (max texte + padding)
+        int maxWidth = tr.getWidth(header);
+        for (Text line : lines) {
+            maxWidth = Math.max(maxWidth, tr.getWidth(line));
+        }
+        int padding = 8;
+        int panelWidth = maxWidth + padding * 2;
+        int lineHeight = 11;
+        int headerHeight = 14;
+        int panelHeight = headerHeight + (lines.size() * lineHeight) + padding;
+
+        // Position : à droite, centré verticalement
+        int panelX = sw - panelWidth - 4;
+        int panelY = (sh - panelHeight) / 2;
+
+        // Fond semi-transparent
+        ctx.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, BG_COLOR);
+        // Bordure haute dorée
+        ctx.fill(panelX, panelY, panelX + panelWidth, panelY + 1, ACCENT_COLOR);
+        // Bordure basse dorée
+        ctx.fill(panelX, panelY + panelHeight - 1, panelX + panelWidth, panelY + panelHeight, ACCENT_COLOR);
+        // Bordure gauche subtile
+        ctx.fill(panelX, panelY, panelX + 1, panelY + panelHeight, ACCENT_COLOR);
+
+        // Header centré
+        int headerX = panelX + (panelWidth - tr.getWidth(header)) / 2;
+        ctx.drawText(tr, header, headerX, panelY + 4, 0xFFFFFFFF, true);
+
+        // Séparateur sous le header
+        ctx.fill(panelX + padding, panelY + headerHeight - 1,
+                panelX + panelWidth - padding, panelY + headerHeight, 0x66FFAA00);
+
+        // Lignes (alignées à droite, comme un vrai scoreboard Minecraft)
+        int textY = panelY + headerHeight + 2;
+        for (Text line : lines) {
+            int textX = panelX + panelWidth - tr.getWidth(line) - padding;
+            ctx.drawText(tr, line, textX, textY, 0xFFFFFFFF, true);
+            textY += lineHeight;
+        }
     }
 
     private static void renderEnding(DrawContext ctx, TextRenderer tr, int sw, int sh) {
