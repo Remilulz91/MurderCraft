@@ -598,7 +598,7 @@ public class GameManager {
                 switch (result) {
                     case INNOCENTS_WIN -> p.playSoundToPlayer(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.MASTER, 1.0f, 1.0f);
                     case MURDERERS_WIN -> p.playSoundToPlayer(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.MASTER, 0.6f, 1.5f);
-                    case DRAW, CANCELED -> p.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS, SoundCategory.MASTER, 1.0f, 0.5f);
+                    case DRAW, CANCELED -> p.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.MASTER, 1.0f, 0.5f);
                 }
             }
         }
