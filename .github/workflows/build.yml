@@ -36,12 +36,23 @@ jobs:
             curl -sSL -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.10.0/gradle/wrapper/gradle-wrapper.jar
           fi
 
-      - name: Build
+      - name: Build PUBLIC variant
         run: ./gradlew build --stacktrace
+
+      - name: Save public JAR
+        run: |
+          mkdir -p artifacts
+          cp build/libs/*.jar artifacts/
+
+      - name: Build DEBUG variant
+        run: ./gradlew clean build -PbuildType=debug --stacktrace
+
+      - name: Save debug JAR
+        run: cp build/libs/*.jar artifacts/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: murdercraft-build
-          path: build/libs/*.jar
-          retention-days: 7
+          path: artifacts/*.jar
+          retention-days: 14

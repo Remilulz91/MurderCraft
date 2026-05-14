@@ -1,127 +1,167 @@
 # MurderCraft
 
-> Un mod Minecraft multijoueur inspiré du mode **Murder** de Garry's Mod et des UHC.
-> 2 meurtriers cachés, 1 justicier armé, des innocents qui doivent survivre.
+> A multiplayer Minecraft mod inspired by **Garry's Mod Murder**.
+> 2 hidden murderers, 1 armed detective, innocents who must survive.
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-orange)](https://fabricmc.net/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Public%20Beta-yellow)](https://modrinth.com/mod/murdercraft)
 
 ---
 
 ## ✦ Concept
 
-À chaque début de partie, **3 rôles** sont distribués aléatoirement :
+At the start of each round, **three roles** are randomly assigned:
 
-| Rôle | Nombre | Arme | Objectif |
-|------|--------|------|----------|
-| ☠ **Meurtrier** | 2 (configurable) | Couteau (one-shot) | Éliminer discrètement tous les innocents. Les deux meurtriers **ne savent pas qui est l'autre**. |
-| ⚭ **Justicier** | 1 | Pistolet | Identifier les meurtriers et les abattre. Tirer sur un innocent = perte définitive du pistolet ! |
-| ☺ **Innocent** | Le reste | Aucune | Survivre, observer, prévenir le justicier. **Un pistolet caché** apparaît pendant la partie : le ramasser promeut en Justicier. |
+| Role | Count | Weapon | Goal |
+|------|-------|--------|------|
+| ☠ **Murderer** | 2 (configurable) | Knife (one-shot) | Discreetly eliminate all innocents. **Murderers cannot keep a pistol.** The two murderers don't know each other directly — but they can spot each other thanks to the soul-flame awareness particles. |
+| ⚭ **Detective** | 1 | Pistol | Identify the murderers and shoot them. **Shooting an innocent makes you lose your pistol permanently** (dropped on the ground for any innocent to pick up). |
+| ☺ **Innocent** | The rest | None | Survive. Help the detective. **Find the hidden pistol** that drops mid-game to become the new Detective. |
 
-### Conditions de victoire
-- **Les Innocents (+ Justicier) gagnent** si tous les meurtriers sont éliminés.
-- **Les Meurtriers gagnent** s'ils éliminent tous les innocents avant la fin du temps imparti.
+### Session structure
+
+A session consists of **4 rounds**. Each round lasts up to **15 minutes**. The team with the most round wins wins the session.
+
+### Tasks (from round 3)
+
+Starting at round 3, **one task** appears per round. Any participant can attempt it:
+- **Exploration**: a glowing chest appears nearby with a Mystery Token inside
+- **Crafting**: an item is announced (torch, bread, etc.) — first to craft it wins
+
+The winner of the task receives a **30-second window** to use `/murder task reveal <player>` and learn that player's role **privately**. Whether to share the info with others (in voice chat) is entirely up to the player.
+
+### Win conditions
+- **Innocents (+ Detective) win** if both murderers are eliminated **OR** the timer runs out
+- **Murderers win** if they kill every non-murderer before the timer ends
 
 ---
 
 ## ⚙ Installation
 
-1. Installe [Fabric Loader](https://fabricmc.net/use/) pour Minecraft 1.21.1
-2. Télécharge la dernière version du mod sur [Modrinth](https://modrinth.com/mod/murdercraft)
-3. Place le fichier `.jar` dans le dossier `mods/` de ton instance
-4. Installe les dépendances :
-   - [Fabric API](https://modrinth.com/mod/fabric-api) (**requis**)
-   - [Cloth Config](https://modrinth.com/mod/cloth-config) (recommandé — config GUI)
-   - [Mod Menu](https://modrinth.com/mod/modmenu) (recommandé — accès à la config in-game)
+1. Install [Fabric Loader](https://fabricmc.net/use/) for Minecraft 1.21.1
+2. Download the latest version from [Modrinth](https://modrinth.com/mod/murdercraft)
+3. Place the `.jar` file in your `mods/` folder
+4. Install required dependencies:
+   - [Fabric API](https://modrinth.com/mod/fabric-api) (**required**)
+   - [Cloth Config](https://modrinth.com/mod/cloth-config) (recommended — config GUI)
+   - [Mod Menu](https://modrinth.com/mod/modmenu) (recommended — access config in-game)
 
-### Multijoueur
-Le mod doit être installé **côté serveur ET côté client**. Le mod ne peut pas être lancé en solo (4 joueurs minimum requis).
-
----
-
-## 🎮 Commandes
-
-| Commande | Description | Permission |
-|----------|-------------|------------|
-| `/murder join` | Rejoindre le lobby | Tous |
-| `/murder leave` | Quitter le lobby | Tous |
-| `/murder status` | Voir l'état de la partie | Tous |
-| `/murder start` | Démarrer la partie | OP |
-| `/murder stop` | Arrêter la partie en cours | OP |
-| `/murder config show` | Afficher la config | OP |
-| `/murder config minPlayers <n>` | Modifier le min joueurs | OP |
-| `/murder config duration <s>` | Durée de la partie | OP |
-| `/murder kick <player>` | Retirer un joueur | OP |
+### Multiplayer
+The mod must be installed on **both the server AND every client**. The mod loads in singleplayer but cannot start a match alone (minimum 4 players required, recommended 5+).
 
 ---
 
-## ⚒ Compilation / Développement
+## 🎮 Commands
 
-### Prérequis
-- [JDK 21](https://adoptium.net/) ou supérieur
-- [IntelliJ IDEA Community](https://www.jetbrains.com/idea/) (recommandé)
+| Command | Description | Permission |
+|---------|-------------|------------|
+| `/murder join` | Join the lobby | Everyone |
+| `/murder leave` | Leave the lobby | Everyone |
+| `/murder status` | Show current game state | Everyone |
+| `/murder task reveal <player>` | Reveal a player's role (only valid after winning a task) | Everyone |
+| `/murder start` | Start the session | OP |
+| `/murder stop` | Stop the current game | OP |
+| `/murder config show` | Print current config | OP |
+| `/murder config minPlayers <n>` | Change min players | OP |
+| `/murder config duration <s>` | Change round duration | OP |
+| `/murder kick <player>` | Remove a player from lobby | OP |
 
-### Build manuel
-```bash
-./gradlew build       # Linux/Mac
-gradlew.bat build     # Windows
-```
-Le fichier `.jar` final est généré dans `build/libs/`.
+### Debug commands (debug build only)
 
-### Premier setup (IntelliJ)
-1. Ouvrir IntelliJ IDEA
-2. `File → Open` → sélectionner le dossier `MurderCraft`
-3. Attendre que Gradle finisse l'import (il téléchargera Minecraft + Fabric Loom automatiquement)
-4. IntelliJ génèrera automatiquement `gradle-wrapper.jar` s'il manque
-5. Lancer la config `runClient` ou `runServer`
-
-> **Note** : Si la première fois tu vois une erreur "gradle-wrapper.jar manquant", ouvre un terminal et exécute `gradle wrapper --gradle-version 8.10` (nécessite Gradle installé globalement), ou demande à IntelliJ d'utiliser un Gradle local.
+The debug build adds `/murder debug ...` commands for testing in solo. **Not available in the public build.**
 
 ---
 
-## 📦 Publication sur Modrinth (auto)
+## ⚒ Build from source
 
-Le workflow GitHub Actions publie automatiquement sur Modrinth quand tu crées un tag :
+### Requirements
+- [JDK 21](https://adoptium.net/)
+- [IntelliJ IDEA Community](https://www.jetbrains.com/idea/) (recommended)
+
+### Manual build
 
 ```bash
-git tag v0.2.0
-git push origin v0.2.0
+./gradlew build                       # Public build (debug OFF)
+./gradlew build -PbuildType=debug     # Debug build (debug ON, separate JAR)
 ```
 
-Pour que ça fonctionne :
-1. Crée un compte sur [Modrinth](https://modrinth.com/)
-2. Crée le projet sur Modrinth, note le **slug** (ex: `murdercraft`)
-3. Mets à jour `projectId` dans `build.gradle`
-4. Génère un **token** Modrinth : https://modrinth.com/settings/pats
-5. Dans ton repo GitHub : `Settings → Secrets → Actions → New secret` → nom `MODRINTH_TOKEN`, valeur = ton token
+The output `.jar` is generated in `build/libs/`:
+- Public: `murdercraft-X.Y.Z.jar`
+- Debug: `murdercraft-debug-X.Y.Z.jar`
+
+### First setup (IntelliJ)
+1. Open IntelliJ IDEA
+2. `File → Open` → select the `MurderCraft` folder
+3. Wait for Gradle to finish importing (it downloads Minecraft + Fabric Loom)
+4. Run the `runClient` or `runServer` configuration
+
+See [SETUP.md](SETUP.md) for the full step-by-step guide.
+
+---
+
+## 📦 Automatic Modrinth publishing
+
+GitHub Actions automatically publishes to Modrinth when you push a tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Required setup:
+1. Create your project on [Modrinth](https://modrinth.com/)
+2. Generate a Modrinth token at https://modrinth.com/settings/pats
+3. Add the token as a GitHub secret named `MODRINTH_TOKEN`
+
+The workflow builds both PUBLIC and DEBUG variants. Only the PUBLIC variant is uploaded to Modrinth. The DEBUG variant is attached to the GitHub Release.
 
 ---
 
 ## 🎯 Roadmap
 
-- [x] Système de rôles (Meurtrier / Justicier / Innocent)
-- [x] Couteau + pistolet + pistolet caché
-- [x] GameManager avec phases (Lobby → Starting → InGame → Ending)
-- [x] HUD personnalisé
+- [x] Three-role system (Murderer / Detective / Innocent)
+- [x] Knife + pistol + hidden pistol
+- [x] GameManager with phases (Lobby → Starting → InGame → Ending)
+- [x] Custom HUD (right-side scoreboard style)
 - [x] Configuration GUI (Cloth Config)
-- [x] Multilingue (FR / EN)
-- [ ] Textures custom (placeholder pour l'instant — à dessiner)
-- [ ] Sons custom (gunshot, knife, kill confirm)
-- [ ] Système de skins (skin du meurtrier qui le démarque pour les meurtriers entre eux ?)
-- [ ] Map dédiée intégrée
-- [ ] Statistiques persistantes (kills, parties gagnées)
+- [x] Multilingual (FR / EN)
+- [x] 4-round session like GMod Murder
+- [x] 15-minute rounds
+- [x] Pistol drop rules (death, friendly fire, murderer pickup prevention)
+- [x] Auto-promotion of innocent picking up hidden pistol
+- [x] Task system (Exploration + Crafting) from round 3
+- [x] Reveal mechanic via `/murder task reveal`
+- [x] Title overlays on screen for important events
+- [x] Murderer awareness particles (visible only to fellow murderers)
+- [x] Better sounds and particles for weapons
+- [x] Public/Debug build variants
+- [ ] Custom OGG sound files (currently uses vanilla sounds)
+- [ ] Persistent statistics (kills, wins, MVP)
+- [ ] Dedicated map integration
+- [ ] Forge / NeoForge support
+
+---
+
+## 🐛 Reporting bugs
+
+This is a **public beta**. Bugs are expected. Please report them on the [GitHub Issues page](https://github.com/Remilulz91/MurderCraft/issues) with:
+- Mod version (e.g., 0.5.0-beta.1)
+- Minecraft version
+- Steps to reproduce
+- Crash log / video if applicable
 
 ---
 
 ## 📜 License
 
-[MIT](LICENSE) — utilise, modifie, redistribue librement.
+Released under the [MIT License](LICENSE) — fork, modify, redistribute freely with attribution.
 
 ---
 
-## 🙌 Crédits
+## 🙌 Credits
 
-- Concept original : **Garry's Mod — Murder**
-- Mod design & dev : **Remilulz_91**
-- Inspirations gameplay : UHC, UHC Loup-Garou, Hypixel Murder Mystery
+- **Concept origin**: Garry's Mod — Murder
+- **Mod design & development**: Remilulz_91
+- **Gameplay inspirations**: UHC, UHC Werewolves, Hypixel Murder Mystery

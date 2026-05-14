@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.0-beta.1] - First public beta release
+
+This is the **first public beta** of MurderCraft. The mod is feature-complete
+but has not yet been thoroughly battle-tested in real multiplayer matches.
+Please report any bugs you find on the GitHub issue tracker.
+
+### Added
+- **Dual build system**: PUBLIC build (production) and DEBUG build (testing)
+- The PUBLIC build has debug commands and mob damage **OFF by default**
+- The DEBUG build has both enabled by default for solo testing
+- Build type is detected at runtime via `murdercraft.build.properties` resource
+
+### Fixed
+- **Infinite pickup loop**: when a murderer received a pistol, the inventory check
+  would drop it at their feet, where Minecraft auto-pickup would re-grab it,
+  spamming chat and inventory. Now the pistol is thrown forward with velocity,
+  has a 3-second pickup delay, and a 3-second per-player cooldown between ejections.
+
+### Changed
+- **HUD relocated to the right side** (vanilla scoreboard style), vertically centered.
+  Shows "MurderCraft" header + round + role + time, right-aligned text on a panel
+  with golden borders.
+- All project documentation translated to English (README, SETUP, CHANGELOG)
+
 ## [0.4.0] - Phase C - Polish & juiciness
 
 ### Added

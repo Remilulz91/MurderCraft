@@ -37,21 +37,32 @@ jobs:
             curl -sSL -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.10.0/gradle/wrapper/gradle-wrapper.jar
           fi
 
-      - name: Build
+      - name: Build PUBLIC variant
         run: ./gradlew build --stacktrace
 
-      - name: Publish to Modrinth
+      - name: Stash public JAR
+        run: |
+          mkdir -p release-artifacts
+          cp build/libs/*.jar release-artifacts/
+
+      - name: Publish PUBLIC to Modrinth
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
         run: ./gradlew publishMods --stacktrace
+
+      - name: Build DEBUG variant (for GitHub release only)
+        run: ./gradlew clean build -PbuildType=debug --stacktrace
+
+      - name: Stash debug JAR
+        run: cp build/libs/*.jar release-artifacts/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: build/libs/*.jar
+          files: release-artifacts/*.jar
           body_path: CHANGELOG.md
           draft: false
-          prerelease: false
+          prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

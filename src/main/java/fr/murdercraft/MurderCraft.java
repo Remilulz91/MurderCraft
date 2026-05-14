@@ -13,19 +13,43 @@ import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 /**
- * Point d'entrée principal de MurderCraft.
- * Initialise tous les systèmes côté serveur et commun.
+ * Main entry point of MurderCraft.
+ * Initializes all server-side and common-side systems.
  */
 public class MurderCraft implements ModInitializer {
 
     public static final String MOD_ID = "murdercraft";
     public static final Logger LOGGER = LoggerFactory.getLogger("MurderCraft");
 
+    // === Build type detection (set by Gradle's processResources) ===
+    private static final boolean IS_DEBUG_BUILD;
+    static {
+        boolean debug = false;
+        try (InputStream is = MurderCraft.class.getResourceAsStream("/murdercraft.build.properties")) {
+            if (is != null) {
+                Properties p = new Properties();
+                p.load(is);
+                debug = "debug".equalsIgnoreCase(p.getProperty("build.type", "public").trim());
+            }
+        } catch (IOException ignored) { }
+        IS_DEBUG_BUILD = debug;
+    }
+
+    /** Returns true if this JAR was built as the debug variant. */
+    public static boolean isDebugBuild() {
+        return IS_DEBUG_BUILD;
+    }
+
     @Override
     public void onInitialize() {
         LOGGER.info("==============================================");
-        LOGGER.info("    MurderCraft - Démarrage du mod");
+        LOGGER.info("    MurderCraft - Starting up ({} build)",
+                IS_DEBUG_BUILD ? "DEBUG" : "PUBLIC");
         LOGGER.info("==============================================");
 
         // 1. Charger la configuration

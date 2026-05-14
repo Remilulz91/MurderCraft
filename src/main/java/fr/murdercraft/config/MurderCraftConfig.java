@@ -86,20 +86,21 @@ public class MurderCraftConfig {
     /** Afficher les sous-titres et indices contextuels ? */
     public boolean showSubtitles = true;
 
-    // === DEBUG (à désactiver pour les releases publiques) ===
+    // === DEBUG (disabled by default in public builds, enabled in debug builds) ===
 
     /**
-     * [DEBUG] Permet aux armes (couteau, pistolet) d'infliger des dégâts létaux
-     * aux mobs (et pas uniquement aux joueurs). Utile pour tester le comportement
-     * en solo. À DÉSACTIVER pour les vraies parties.
+     * [DEBUG] Allows weapons (knife, pistol) to deal lethal damage to mobs
+     * (not just players). Useful for testing in solo. Disable for real matches.
+     * Default depends on build type (public = false, debug = true).
      */
-    public boolean debugAllowMobDamage = false;
+    public boolean debugAllowMobDamage = MurderCraft.isDebugBuild();
 
     /**
-     * [DEBUG] Active les commandes /murder debug ... — à DÉSACTIVER pour la prod.
-     * Sans cela, n'importe quel admin/OP de serveur pourrait cheat avec /murder debug.
+     * [DEBUG] Enables /murder debug ... commands. DISABLE for production servers
+     * — otherwise any OP could cheat with debug commands.
+     * Default depends on build type (public = false, debug = true).
      */
-    public boolean enableDebugCommands = true;
+    public boolean enableDebugCommands = MurderCraft.isDebugBuild();
 
     // === Méthodes ===
 

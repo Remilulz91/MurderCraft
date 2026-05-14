@@ -7,9 +7,19 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
+// Build type: 'public' (default, debug commands OFF) or 'debug' (debug commands ON)
+// Usage: ./gradlew build                   → public build
+//        ./gradlew build -PbuildType=debug → debug build (separate JAR with -debug suffix)
+def buildType = project.findProperty('buildType') ?: 'public'
+def archivesName = buildType == 'debug'
+        ? "${project.archives_base_name}-debug"
+        : project.archives_base_name
+
 base {
-    archivesName = project.archives_base_name
+    archivesName = archivesName
 }
+
+println "==> Building MurderCraft v${version} (type: ${buildType})"
 
 repositories {
     maven {
@@ -45,11 +55,17 @@ processResources {
     inputs.property "version", project.version
     inputs.property "minecraft_version", project.minecraft_version
     inputs.property "loader_version", project.loader_version
+    inputs.property "buildType", buildType
 
     filesMatching("fabric.mod.json") {
         expand "version": project.version,
                 "minecraft_version": project.minecraft_version,
                 "loader_version": project.loader_version
+    }
+
+    filesMatching("murdercraft.build.properties") {
+        expand "build_type": buildType,
+                "version": project.version
     }
 }
 
