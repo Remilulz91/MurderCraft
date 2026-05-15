@@ -53,6 +53,16 @@ public class PlayerEventHandler {
             }
         });
 
+        // Blocage des dégâts pendant la fenêtre d'immunité au spawn aléatoire
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, damageSource, damageAmount) -> {
+            if (!(entity instanceof ServerPlayerEntity player)) return true;
+            GameManager gm = GameManager.get();
+            if (gm.isInSafeSpawn(player.getUuid())) {
+                return false; // Bloque tous types de dégâts
+            }
+            return true;
+        });
+
         // Mort d'un joueur — règles spéciales pour le justicier + cleanup général
         ServerLivingEntityEvents.ALLOW_DEATH.register((entity, damageSource, damageAmount) -> {
             if (!(entity instanceof ServerPlayerEntity player)) return true;

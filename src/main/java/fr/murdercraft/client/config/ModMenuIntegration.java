@@ -59,6 +59,34 @@ public class ModMenuIntegration implements ModMenuApi {
                     .setMin(0).setMax(120).setDefaultValue(15)
                     .setSaveConsumer(v -> cfg.interRoundSeconds = v).build());
 
+            // === Spawn aléatoire ===
+            game.addEntry(entry.startBooleanToggle(Text.translatable("config.murdercraft.randomSpawnEnabled"), cfg.randomSpawnEnabled)
+                    .setDefaultValue(true)
+                    .setTooltip(Text.translatable("config.murdercraft.randomSpawnEnabled.tooltip"))
+                    .setSaveConsumer(v -> cfg.randomSpawnEnabled = v).build());
+
+            game.addEntry(entry.startIntField(Text.translatable("config.murdercraft.randomSpawnRadius"), cfg.randomSpawnRadius)
+                    .setMin(50).setMax(2000).setDefaultValue(200)
+                    .setSaveConsumer(v -> cfg.randomSpawnRadius = v).build());
+
+            game.addEntry(entry.startIntField(Text.translatable("config.murdercraft.randomSpawnHeight"), cfg.randomSpawnHeight)
+                    .setMin(0).setMax(100).setDefaultValue(25)
+                    .setSaveConsumer(v -> cfg.randomSpawnHeight = v).build());
+
+            game.addEntry(entry.startIntField(Text.translatable("config.murdercraft.spawnImmunitySeconds"), cfg.spawnImmunitySeconds)
+                    .setMin(0).setMax(60).setDefaultValue(8)
+                    .setSaveConsumer(v -> cfg.spawnImmunitySeconds = v).build());
+
+            // === World border ===
+            game.addEntry(entry.startBooleanToggle(Text.translatable("config.murdercraft.useWorldBorder"), cfg.useWorldBorder)
+                    .setDefaultValue(true)
+                    .setTooltip(Text.translatable("config.murdercraft.useWorldBorder.tooltip"))
+                    .setSaveConsumer(v -> cfg.useWorldBorder = v).build());
+
+            game.addEntry(entry.startIntField(Text.translatable("config.murdercraft.worldBorderSize"), cfg.worldBorderSize)
+                    .setMin(50).setMax(10000).setDefaultValue(500)
+                    .setSaveConsumer(v -> cfg.worldBorderSize = v).build());
+
             // === Catégorie : Rôles ===
             ConfigCategory roles = builder.getOrCreateCategory(Text.translatable("config.murdercraft.category.roles"));
 

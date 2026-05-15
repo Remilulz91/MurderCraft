@@ -78,6 +78,19 @@
   "murdercraft.pistol.bullets_remaining": "🔫 Bullets remaining: %s/%s",
   "murdercraft.pistol.tooltip.bullets": "Bullets: %s/%s",
   "murdercraft.item.no_drop": "⛔ This item cannot be dropped",
+
+  "murdercraft.spawn.teleported": "📍 Players have been teleported randomly across the map",
+  "murdercraft.spawn.immunity_countdown": "🛡 Damage immunity: %s s",
+  "murdercraft.spawn.immunity_expired": "⚠ You are no longer invulnerable!",
+
+  "config.murdercraft.randomSpawnEnabled": "Random spawn at the start of each round",
+  "config.murdercraft.randomSpawnEnabled.tooltip": "Teleports players randomly across the map. Avoids ocean/river biomes.",
+  "config.murdercraft.randomSpawnRadius": "Random spawn radius (blocks)",
+  "config.murdercraft.randomSpawnHeight": "Extra spawn height (blocks)",
+  "config.murdercraft.spawnImmunitySeconds": "Spawn immunity duration (s)",
+  "config.murdercraft.useWorldBorder": "Enable game world border",
+  "config.murdercraft.useWorldBorder.tooltip": "Limits the play area with a square world border centered on the world spawn.",
+  "config.murdercraft.worldBorderSize": "World border size (blocks)",
   "murdercraft.hidden_pistol.promoted": "★ You picked up the hidden pistol — you are now a Detective!",
 
   "murdercraft.hud.role_label": "Role",

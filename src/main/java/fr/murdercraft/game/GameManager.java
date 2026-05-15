@@ -10,6 +10,9 @@ import fr.murdercraft.roles.RoleManager;
 import fr.murdercraft.tasks.TaskManager;
 import fr.murdercraft.util.TitleUtil;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.BiomeTags;
+import net.minecraft.world.border.WorldBorder;
+import net.minecraft.world.Heightmap;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
@@ -70,6 +73,15 @@ public class GameManager {
     /** Cooldown anti-spam pour l'éjection de pistolet (par joueur). */
     private final Map<UUID, Long> lastPistolEjection = new HashMap<>();
     private static final long EJECTION_COOLDOWN_MS = 3000;
+
+    /** Expiration de l'immunité aux dégâts après spawn (UUID → timestamp ms). */
+    private final Map<UUID, Long> safeSpawnExpiration = new HashMap<>();
+
+    /** Sauvegarde de la world border pour restauration en fin de session. */
+    private double savedBorderCenterX = 0;
+    private double savedBorderCenterZ = 0;
+    private double savedBorderSize = 0;
+    private boolean borderWasModified = false;
 
     public int getCurrentRound() {
         return currentRound;
@@ -161,6 +173,9 @@ public class GameManager {
 
         broadcast(Text.translatable("murdercraft.session.started", cfg.maxRounds)
                 .formatted(Formatting.GOLD, Formatting.BOLD));
+
+        // Configure la world border de partie
+        setupWorldBorder();
 
         return startNextRound();
     }
@@ -280,6 +295,9 @@ public class GameManager {
         }
 
         broadcast(Text.translatable("murdercraft.game.started").formatted(Formatting.GREEN, Formatting.BOLD));
+
+        // Téléporte les joueurs aléatoirement (avec immunité) — fait après distribution
+        teleportPlayersRandomly(players);
 
         // Démarre une tâche si c'est la manche 3+ (système de Phase B)
         TaskManager.get().onRoundStart(server, currentRound);
@@ -464,6 +482,163 @@ public class GameManager {
             }
         }
         return PistolItem.MAX_AMMO;
+    }
+
+    // ============================================================
+    // === SPAWN ALÉATOIRE + IMMUNITÉ + WORLD BORDER ==============
+    // ============================================================
+
+    /** Téléporte tous les joueurs d'une liste à des positions aléatoires terrestres. */
+    private void teleportPlayersRandomly(List<ServerPlayerEntity> players) {
+        MurderCraftConfig cfg = MurderCraftConfig.get();
+        if (!cfg.randomSpawnEnabled) return;
+        if (server == null) return;
+
+        net.minecraft.server.world.ServerWorld world = server.getOverworld();
+        if (world == null) return;
+
+        net.minecraft.util.math.BlockPos spawnCenter = world.getSpawnPos();
+        int radius = cfg.randomSpawnRadius;
+        int height = cfg.randomSpawnHeight;
+
+        for (ServerPlayerEntity p : players) {
+            net.minecraft.util.math.BlockPos target = findValidLandSpawn(world, spawnCenter, radius, 60);
+            if (target == null) {
+                MurderCraft.LOGGER.warn("[GameManager] No valid land spawn found for {}, using world spawn", p.getName().getString());
+                target = spawnCenter;
+            }
+            double tx = target.getX() + 0.5;
+            double ty = target.getY() + height; // Spawn en hauteur
+            double tz = target.getZ() + 0.5;
+
+            // Téléporte
+            p.requestTeleport(tx, ty, tz);
+
+            // Active l'immunité aux dégâts
+            markSafeSpawn(p);
+        }
+
+        broadcast(Text.translatable("murdercraft.spawn.teleported")
+                .formatted(Formatting.AQUA));
+    }
+
+    /** Cherche une position de spawn valide (sol terrestre, pas eau). */
+    private net.minecraft.util.math.BlockPos findValidLandSpawn(
+            net.minecraft.server.world.ServerWorld world,
+            net.minecraft.util.math.BlockPos center,
+            int radius, int maxAttempts) {
+        java.util.Random rand = new java.util.Random();
+        for (int i = 0; i < maxAttempts; i++) {
+            double angle = rand.nextDouble() * Math.PI * 2;
+            int dist = 30 + rand.nextInt(Math.max(1, radius - 30)); // évite le centre exact
+            int dx = (int) (Math.cos(angle) * dist);
+            int dz = (int) (Math.sin(angle) * dist);
+            net.minecraft.util.math.BlockPos surface = world.getTopPosition(
+                    Heightmap.Type.MOTION_BLOCKING,
+                    center.add(dx, 0, dz));
+
+            // Vérifier biome — exclure océan/rivière/etc.
+            var biome = world.getBiome(surface);
+            if (biome.isIn(BiomeTags.IS_OCEAN)
+                    || biome.isIn(BiomeTags.IS_DEEP_OCEAN)
+                    || biome.isIn(BiomeTags.IS_RIVER)) {
+                continue;
+            }
+
+            // Vérifier que le bloc en-dessous est solide (sol)
+            var below = world.getBlockState(surface.down());
+            if (!below.isSolidBlock(world, surface.down())) continue;
+
+            // Pas dans un fluide (eau/lave)
+            if (!world.getFluidState(surface).isEmpty()) continue;
+
+            return surface;
+        }
+        return null;
+    }
+
+    /** Active l'immunité aux dégâts pour ce joueur pendant N secondes. */
+    public void markSafeSpawn(ServerPlayerEntity player) {
+        long expiresAt = System.currentTimeMillis()
+                + (MurderCraftConfig.get().spawnImmunitySeconds * 1000L);
+        safeSpawnExpiration.put(player.getUuid(), expiresAt);
+    }
+
+    /** Indique si un joueur est encore dans sa fenêtre d'immunité. */
+    public boolean isInSafeSpawn(UUID playerId) {
+        Long expires = safeSpawnExpiration.get(playerId);
+        if (expires == null) return false;
+        if (System.currentTimeMillis() > expires) {
+            safeSpawnExpiration.remove(playerId);
+            return false;
+        }
+        return true;
+    }
+
+    /** Renvoie le nombre de secondes restantes d'immunité (0 si expirée). */
+    public int getSafeSpawnSecondsLeft(UUID playerId) {
+        Long expires = safeSpawnExpiration.get(playerId);
+        if (expires == null) return 0;
+        long left = expires - System.currentTimeMillis();
+        return left <= 0 ? 0 : (int) Math.ceil(left / 1000.0);
+    }
+
+    /** Configure la world border carrée centrée sur /setworldspawn. */
+    private void setupWorldBorder() {
+        MurderCraftConfig cfg = MurderCraftConfig.get();
+        if (!cfg.useWorldBorder) return;
+        if (server == null) return;
+
+        net.minecraft.server.world.ServerWorld world = server.getOverworld();
+        if (world == null) return;
+
+        WorldBorder border = world.getWorldBorder();
+
+        // Sauvegarde l'état actuel pour le restaurer en fin de session
+        if (!borderWasModified) {
+            savedBorderCenterX = border.getCenterX();
+            savedBorderCenterZ = border.getCenterZ();
+            savedBorderSize = border.getSize();
+            borderWasModified = true;
+        }
+
+        net.minecraft.util.math.BlockPos spawnPos = world.getSpawnPos();
+        border.setCenter(spawnPos.getX() + 0.5, spawnPos.getZ() + 0.5);
+        border.setSize(cfg.worldBorderSize);
+        MurderCraft.LOGGER.info("[GameManager] World border set: center=({},{}), size={}",
+                spawnPos.getX(), spawnPos.getZ(), cfg.worldBorderSize);
+    }
+
+    /** Affiche le compte à rebours d'immunité en action bar (pour ceux qui sont protégés). */
+    private void showSafeSpawnCountdown() {
+        if (server == null || safeSpawnExpiration.isEmpty()) return;
+        for (UUID id : safeSpawnExpiration.keySet()) {
+            ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
+            if (p == null) continue;
+            int secondsLeft = getSafeSpawnSecondsLeft(id);
+            if (secondsLeft > 0) {
+                p.sendMessage(Text.translatable("murdercraft.spawn.immunity_countdown", secondsLeft)
+                        .formatted(Formatting.AQUA, Formatting.BOLD), true);
+            } else {
+                p.sendMessage(Text.translatable("murdercraft.spawn.immunity_expired")
+                        .formatted(Formatting.YELLOW), true);
+            }
+        }
+    }
+
+    /** Restaure la world border à sa configuration d'avant-session. */
+    private void restoreWorldBorder() {
+        if (!borderWasModified) return;
+        if (server == null) return;
+
+        net.minecraft.server.world.ServerWorld world = server.getOverworld();
+        if (world == null) return;
+
+        WorldBorder border = world.getWorldBorder();
+        border.setCenter(savedBorderCenterX, savedBorderCenterZ);
+        border.setSize(savedBorderSize);
+        borderWasModified = false;
+        MurderCraft.LOGGER.info("[GameManager] World border restored");
     }
 
     /**
@@ -674,6 +849,10 @@ public class GameManager {
         // Reset cooldown éjection pistolet
         lastPistolEjection.clear();
 
+        // Reset immunités + restore world border
+        safeSpawnExpiration.clear();
+        restoreWorldBorder();
+
         // Restaurer les joueurs
         if (server != null) {
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
@@ -721,6 +900,11 @@ public class GameManager {
                 // Awareness meurtriers : toutes les 2s, particules privées entre meurtriers
                 if (gameTicksLeft % 40 == 0) {
                     sendMurdererAwareness();
+                }
+
+                // Action bar countdown pour l'immunité au spawn (chaque seconde)
+                if (gameTicksLeft % 20 == 0) {
+                    showSafeSpawnCountdown();
                 }
 
                 // Tick TaskManager (vérifie complétion + décrémente fenêtres de révélation)

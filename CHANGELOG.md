@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.5.0-beta.6] - Random spawn + spawn immunity + world border
+
+### Added
+
+- **Random spawn at round start**: at the beginning of every round, all participants
+  are teleported to random valid land positions within a configurable radius of
+  the world spawn (`/setworldspawn`). Ocean, river, and deep ocean biomes are
+  automatically excluded so nobody spawns in water.
+- **Spawn height + damage immunity**: players spawn 25 blocks (configurable) above
+  ground level, with full damage immunity for 8 seconds (configurable). This
+  prevents fall damage, lava deaths, and assassination during the chaotic first
+  moments of a round.
+- **Action bar countdown**: shows "🛡 Damage immunity: Xs" while the buffer is
+  active, followed by "⚠ You are no longer invulnerable!" when it expires.
+- **Square world border**: a configurable square world border is automatically
+  set up at session start, centered on the world spawn. Default size: 500 blocks
+  across. The original world border configuration is saved and restored when
+  the session ends.
+- New config options: `randomSpawnEnabled`, `randomSpawnRadius`, `randomSpawnHeight`,
+  `spawnImmunitySeconds`, `useWorldBorder`, `worldBorderSize`.
+
+### Why
+Prevents trolling and griefing where innocents would run far away and hide. The
+world border forces the action to happen in a defined zone. Random spawn means
+players don't all clump at the lobby — they have to navigate to find each other,
+which mirrors the GMod Murder experience.
+
 ## [0.5.0-beta.5] - Custom items cannot be dropped manually
 
 ### Added

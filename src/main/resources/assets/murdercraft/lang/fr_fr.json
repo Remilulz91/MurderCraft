@@ -78,6 +78,19 @@
   "murdercraft.pistol.bullets_remaining": "🔫 Balles restantes : %s/%s",
   "murdercraft.pistol.tooltip.bullets": "Balles : %s/%s",
   "murdercraft.item.no_drop": "⛔ Cet item ne peut pas être jeté",
+
+  "murdercraft.spawn.teleported": "📍 Les joueurs ont été téléportés aléatoirement sur la carte",
+  "murdercraft.spawn.immunity_countdown": "🛡 Immunité aux dégâts : %s s",
+  "murdercraft.spawn.immunity_expired": "⚠ Tu n'es plus invulnérable !",
+
+  "config.murdercraft.randomSpawnEnabled": "Spawn aléatoire au début de chaque manche",
+  "config.murdercraft.randomSpawnEnabled.tooltip": "Téléporte les joueurs aléatoirement sur la carte. Évite les biomes océan/rivière.",
+  "config.murdercraft.randomSpawnRadius": "Rayon du spawn aléatoire (blocs)",
+  "config.murdercraft.randomSpawnHeight": "Hauteur supplémentaire au spawn (blocs)",
+  "config.murdercraft.spawnImmunitySeconds": "Durée de l'immunité au spawn (s)",
+  "config.murdercraft.useWorldBorder": "Activer la world border de partie",
+  "config.murdercraft.useWorldBorder.tooltip": "Limite la zone de jeu via une world border carrée centrée sur le world spawn.",
+  "config.murdercraft.worldBorderSize": "Taille de la world border (blocs)",
   "murdercraft.hidden_pistol.promoted": "★ Tu as ramassé le pistolet caché — tu es maintenant Justicier !",
 
   "murdercraft.hud.role_label": "Rôle",

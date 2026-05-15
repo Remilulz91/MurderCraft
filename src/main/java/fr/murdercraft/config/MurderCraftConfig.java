@@ -78,6 +78,28 @@ public class MurderCraftConfig {
     /** Coordonnées du lobby (x, y, z) si teleportToLobbyAfterGame est activé. */
     public double[] lobbyCoordinates = {0.0, 64.0, 0.0};
 
+    // === Spawn aléatoire au début de chaque manche ===
+
+    /** Activer la téléportation aléatoire des joueurs au début de chaque manche. */
+    public boolean randomSpawnEnabled = true;
+
+    /** Rayon de la zone de spawn aléatoire (en blocs, depuis le world spawn). */
+    public int randomSpawnRadius = 200;
+
+    /** Hauteur supplémentaire au-dessus du sol pour le spawn (pour les biomes vallonnés). */
+    public int randomSpawnHeight = 25;
+
+    /** Durée de l'immunité aux dégâts après spawn aléatoire (en secondes). */
+    public int spawnImmunitySeconds = 8;
+
+    // === World border de partie ===
+
+    /** Activer la world border de partie (centrée sur /setworldspawn). */
+    public boolean useWorldBorder = true;
+
+    /** Taille de la world border en blocs (côté du carré). */
+    public int worldBorderSize = 500;
+
     // === Interface ===
 
     /** Afficher le HUD personnalisé (rôle, timer, etc.) ? */
