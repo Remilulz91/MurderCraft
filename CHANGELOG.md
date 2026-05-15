@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.5.0-beta.7] - Spawn dispersion + survival enforcement
+
+### Fixed
+- **"You are no longer invulnerable!" message spam**: the action bar message
+  showing immunity expiration was being sent every server tick (20 times/second
+  effectively, since the check ran every 20 ticks). Now sent **once** when the
+  immunity expires, then the entry is removed from the tracking map.
+- **World border not setting up in debug mode**: `/murder debug start` did not
+  trigger `setupWorldBorder()` (only normal `/murder start` did). The world
+  border is now also set up when starting a debug game.
+
+### Added
+- **Minimum spawn distance between players**: random teleport now ensures
+  players don't spawn too close to each other. Scales with player count:
+  - 2 players: 80 blocks minimum
+  - 3-4 players: 60 blocks
+  - 5-8 players: 40 blocks
+  - 9-16 players: 30 blocks
+  - 17+ players: 20 blocks
+  If no position satisfying the constraint can be found after 60 attempts,
+  the constraint is relaxed instead of failing.
+- **Survival gamemode enforced at game start**: all participants are
+  automatically switched to survival mode when a round starts, including
+  when starting from a debug build. Ensures everyone takes damage equally
+  and the game can actually be tested.
+
 ## [0.5.0-beta.6] - Random spawn + spawn immunity + world border
 
 ### Added

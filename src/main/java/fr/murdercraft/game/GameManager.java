@@ -11,6 +11,7 @@ import fr.murdercraft.tasks.TaskManager;
 import fr.murdercraft.util.TitleUtil;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.BiomeTags;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.Heightmap;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -491,7 +492,8 @@ public class GameManager {
     // === SPAWN ALÉATOIRE + IMMUNITÉ + WORLD BORDER ==============
     // ============================================================
 
-    /** Téléporte tous les joueurs d'une liste à des positions aléatoires terrestres. */
+    /** Téléporte tous les joueurs d'une liste à des positions aléatoires terrestres
+     * en garantissant une distance minimale entre eux + les passe en mode survie. */
     private void teleportPlayersRandomly(List<ServerPlayerEntity> players) {
         MurderCraftConfig cfg = MurderCraftConfig.get();
         if (!cfg.randomSpawnEnabled) return;
@@ -504,12 +506,35 @@ public class GameManager {
         int radius = cfg.randomSpawnRadius;
         int height = cfg.randomSpawnHeight;
 
+        // Distance minimale entre 2 joueurs (scale avec le nombre de joueurs)
+        int playerCount = players.size();
+        int minPlayerDist;
+        if (playerCount <= 2) minPlayerDist = 80;
+        else if (playerCount <= 4) minPlayerDist = 60;
+        else if (playerCount <= 8) minPlayerDist = 40;
+        else if (playerCount <= 16) minPlayerDist = 30;
+        else minPlayerDist = 20;
+
+        List<net.minecraft.util.math.BlockPos> assignedPositions = new java.util.ArrayList<>();
+
         for (ServerPlayerEntity p : players) {
-            net.minecraft.util.math.BlockPos target = findValidLandSpawn(world, spawnCenter, radius, 60);
+            // Tentative 1 : avec contrainte de distance minimale
+            net.minecraft.util.math.BlockPos target = findValidLandSpawn(world, spawnCenter, radius, 60,
+                    assignedPositions, minPlayerDist);
+            // Tentative 2 (fallback) : relâche la contrainte si on n'y arrive pas
             if (target == null) {
-                MurderCraft.LOGGER.warn("[GameManager] No valid land spawn found for {}, using world spawn", p.getName().getString());
+                MurderCraft.LOGGER.warn("[GameManager] Couldn't find spawn ≥{}b away for {}, relaxing constraint",
+                        minPlayerDist, p.getName().getString());
+                target = findValidLandSpawn(world, spawnCenter, radius, 30, null, 0);
+            }
+            if (target == null) {
+                MurderCraft.LOGGER.warn("[GameManager] No valid land spawn at all for {}, using world spawn",
+                        p.getName().getString());
                 target = spawnCenter;
             }
+
+            assignedPositions.add(target);
+
             double tx = target.getX() + 0.5;
             double ty = target.getY() + height; // Spawn en hauteur
             double tz = target.getZ() + 0.5;
@@ -519,21 +544,35 @@ public class GameManager {
 
             // Active l'immunité aux dégâts
             markSafeSpawn(p);
+
+            // Force le mode survie pour avoir une partie équitable (même en debug)
+            if (p.interactionManager.getGameMode() != GameMode.SURVIVAL) {
+                p.changeGameMode(GameMode.SURVIVAL);
+            }
         }
 
         broadcast(Text.translatable("murdercraft.spawn.teleported")
                 .formatted(Formatting.AQUA));
     }
 
-    /** Cherche une position de spawn valide (sol terrestre, pas eau). */
+    /**
+     * Cherche une position de spawn valide : sol terrestre, pas eau, biome non-océan/rivière.
+     * Si avoidPositions != null, refuse aussi les positions à moins de minDistFromOthers blocs
+     * de toute position déjà assignée.
+     */
     private net.minecraft.util.math.BlockPos findValidLandSpawn(
             net.minecraft.server.world.ServerWorld world,
             net.minecraft.util.math.BlockPos center,
-            int radius, int maxAttempts) {
+            int radius, int maxAttempts,
+            List<net.minecraft.util.math.BlockPos> avoidPositions,
+            int minDistFromOthers) {
+
         java.util.Random rand = new java.util.Random();
+        double minDistSq = (double) minDistFromOthers * minDistFromOthers;
+
         for (int i = 0; i < maxAttempts; i++) {
             double angle = rand.nextDouble() * Math.PI * 2;
-            int dist = 30 + rand.nextInt(Math.max(1, radius - 30)); // évite le centre exact
+            int dist = 30 + rand.nextInt(Math.max(1, radius - 30));
             int dx = (int) (Math.cos(angle) * dist);
             int dz = (int) (Math.sin(angle) * dist);
             net.minecraft.util.math.BlockPos surface = world.getTopPosition(
@@ -554,6 +593,20 @@ public class GameManager {
 
             // Pas dans un fluide (eau/lave)
             if (!world.getFluidState(surface).isEmpty()) continue;
+
+            // Vérifier la distance minimale aux autres positions déjà assignées
+            if (avoidPositions != null && !avoidPositions.isEmpty() && minDistSq > 0) {
+                boolean tooClose = false;
+                for (net.minecraft.util.math.BlockPos other : avoidPositions) {
+                    double sx = surface.getX() - other.getX();
+                    double sz = surface.getZ() - other.getZ();
+                    if (sx * sx + sz * sz < minDistSq) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+                if (tooClose) continue;
+            }
 
             return surface;
         }
