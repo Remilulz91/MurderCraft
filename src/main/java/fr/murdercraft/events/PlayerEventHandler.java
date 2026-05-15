@@ -11,7 +11,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -94,8 +93,9 @@ public class PlayerEventHandler {
             if (stack.isEmpty()) return;
             if (!isCustomMurderItem(stack)) return;
 
-            // En 1.21+, getOwner() retourne directement le LivingEntity résolu
-            LivingEntity thrower = item.getOwner();
+            // En 1.21+, getOwner() retourne l'Entity résolue (peut être null)
+            // On utilise var pour laisser Java déduire le type exact retourné par l'API
+            var thrower = item.getOwner();
             if (!(thrower instanceof ServerPlayerEntity owner)) return;
             // drop système ou thrower non-joueur → on n'intercepte pas
 
