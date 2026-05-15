@@ -11,14 +11,13 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
-
-import java.util.UUID;
 
 /**
  * Listeners pour les événements joueurs : déconnexion, ramassage d'item, mort.
@@ -87,19 +86,18 @@ public class PlayerEventHandler {
         });
 
         // Bloque le drop manuel (Q-press ou drag-out) des items custom
-        // Astuce : un drop manuel attribue l'owner au joueur (via retainOwnership=true)
-        //         tandis qu'un drop système (notre dropHiddenPistolAt) laisse l'owner null
+        // Astuce : un drop manuel attribue un "thrower" au joueur (via retainOwnership=true)
+        //         tandis qu'un drop système (notre dropHiddenPistolAt) laisse thrower null
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
             if (!(entity instanceof ItemEntity item)) return;
             ItemStack stack = item.getStack();
             if (stack.isEmpty()) return;
             if (!isCustomMurderItem(stack)) return;
 
-            UUID ownerUuid = item.getOwner();
-            if (ownerUuid == null) return; // drop système, on laisse passer
-
-            ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(ownerUuid);
-            if (owner == null) return; // joueur déconnecté, on laisse l'item
+            // En 1.21+, getOwner() retourne directement le LivingEntity résolu
+            LivingEntity thrower = item.getOwner();
+            if (!(thrower instanceof ServerPlayerEntity owner)) return;
+            // drop système ou thrower non-joueur → on n'intercepte pas
 
             // Rend l'item à son propriétaire et supprime l'entity drop
             ItemStack toReturn = stack.copy();
