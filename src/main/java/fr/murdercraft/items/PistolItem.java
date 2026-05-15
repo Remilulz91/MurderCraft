@@ -3,12 +3,16 @@ package fr.murdercraft.items;
 import fr.murdercraft.config.MurderCraftConfig;
 import fr.murdercraft.game.GameManager;
 import fr.murdercraft.roles.Role;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvents;
@@ -37,8 +41,49 @@ public class PistolItem extends Item {
     /** Cooldown entre deux tirs (en ticks). */
     private static final int COOLDOWN_TICKS = 20;
 
+    /** Nombre maximum de balles dans un pistolet (règle Squeezie). */
+    public static final int MAX_AMMO = 2;
+    /** Clé NBT pour stocker les balles restantes. */
+    private static final String NBT_KEY_AMMO = "murdercraft_ammo";
+
     public PistolItem(Settings settings) {
         super(settings);
+    }
+
+    // === Munitions (persistées via DataComponentTypes.CUSTOM_DATA) ===
+
+    /** Lit le nombre de balles restantes dans ce pistolet. Défaut : MAX_AMMO si jamais initialisé. */
+    public static int getAmmo(ItemStack stack) {
+        NbtComponent custom = stack.get(DataComponentTypes.CUSTOM_DATA);
+        if (custom == null) return MAX_AMMO;
+        NbtCompound nbt = custom.copyNbt();
+        if (nbt.contains(NBT_KEY_AMMO)) {
+            return nbt.getInt(NBT_KEY_AMMO);
+        }
+        return MAX_AMMO;
+    }
+
+    /** Modifie le nombre de balles. Sauve dans le DataComponent. */
+    public static void setAmmo(ItemStack stack, int ammo) {
+        NbtComponent existing = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT);
+        NbtCompound nbt = existing.copyNbt();
+        nbt.putInt(NBT_KEY_AMMO, Math.max(0, Math.min(MAX_AMMO, ammo)));
+        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbt));
+    }
+
+    /** Crée un ItemStack avec un nombre de balles donné. */
+    public static ItemStack createWithAmmo(net.minecraft.item.Item item, int ammo) {
+        ItemStack s = new ItemStack(item);
+        setAmmo(s, ammo);
+        return s;
+    }
+
+    @Override
+    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+        super.appendTooltip(stack, context, tooltip, type);
+        int ammo = getAmmo(stack);
+        tooltip.add(Text.translatable("murdercraft.pistol.tooltip.bullets", ammo, MAX_AMMO)
+                .formatted(ammo > 0 ? Formatting.GREEN : Formatting.DARK_RED));
     }
 
     @Override
@@ -71,6 +116,18 @@ public class PistolItem extends Item {
             }
         }
 
+        // Check munitions (règle Squeezie : 2 balles max par pistolet)
+        int ammo = getAmmo(stack);
+        if (ammo <= 0) {
+            shooter.sendMessage(Text.translatable("murdercraft.pistol.empty").formatted(Formatting.RED, Formatting.BOLD), true);
+            shooter.playSoundToPlayer(SoundEvents.BLOCK_DISPENSER_FAIL, shooter.getSoundCategory(), 0.5f, 1.5f);
+            player.getItemCooldownManager().set(this, 10); // petit cooldown anti-spam
+            return TypedActionResult.fail(stack);
+        }
+        // Décrément AVANT le tir (un tir consomme une balle quoi qu'il arrive)
+        setAmmo(stack, ammo - 1);
+        int remainingAmmo = ammo - 1;
+
         // Effets visuels et sonores — combo de 2 sons pour un meilleur "bang"
         world.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
                 SoundEvents.ENTITY_GENERIC_EXPLODE.value(), shooter.getSoundCategory(), 0.4f, 2.0f);
@@ -101,6 +158,11 @@ public class PistolItem extends Item {
 
         // Cooldown
         player.getItemCooldownManager().set(this, COOLDOWN_TICKS);
+
+        // Affiche les balles restantes en action bar (au-dessus de l'hotbar)
+        Formatting ammoColor = remainingAmmo > 0 ? Formatting.YELLOW : Formatting.DARK_RED;
+        shooter.sendMessage(Text.translatable("murdercraft.pistol.bullets_remaining", remainingAmmo, MAX_AMMO)
+                .formatted(ammoColor), true);
 
         return TypedActionResult.success(stack);
     }
@@ -140,13 +202,23 @@ public class PistolItem extends Item {
         } else {
             // Tir sur innocent ou autre — le pistolet tombe au sol (ramassable par innocents seulement)
             if (MurderCraftConfig.get().detectiveLosesGunOnFriendlyFire) {
+                // Récupérer les balles restantes du pistolet du shooter pour préserver le compteur
+                int currentAmmo = MAX_AMMO;
+                for (int i = 0; i < shooter.getInventory().size(); i++) {
+                    ItemStack s = shooter.getInventory().getStack(i);
+                    if (s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL)) {
+                        currentAmmo = getAmmo(s);
+                        break;
+                    }
+                }
+
                 shooter.getInventory().remove(s -> s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL),
                         Integer.MAX_VALUE, shooter.getInventory());
                 gm.getRoleManager().markPermanentlyDisarmed(shooter.getUuid());
                 // Le justicier redevient innocent (perte du rôle)
                 gm.getRoleManager().setRole(shooter.getUuid(), Role.INNOCENT);
-                // Drop le pistolet au sol pour qu'un autre innocent puisse le récupérer
-                gm.dropHiddenPistolAt(shooter);
+                // Drop le pistolet au sol avec ses balles restantes
+                gm.dropHiddenPistolAt(shooter, currentAmmo);
                 shooter.sendMessage(Text.translatable("murdercraft.pistol.friendly_fire")
                         .formatted(Formatting.RED, Formatting.BOLD), false);
             }

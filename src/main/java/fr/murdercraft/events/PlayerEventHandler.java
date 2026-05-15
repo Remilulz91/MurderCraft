@@ -3,6 +3,7 @@ package fr.murdercraft.events;
 import fr.murdercraft.MurderCraft;
 import fr.murdercraft.game.GameManager;
 import fr.murdercraft.items.ModItems;
+import fr.murdercraft.items.PistolItem;
 import fr.murdercraft.roles.Role;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -58,12 +59,21 @@ public class PlayerEventHandler {
 
             Role role = gm.getRoleManager().getRole(player);
             if (role == Role.DETECTIVE) {
-                // Retire le pistolet de l'inventaire avant le drop normal (sinon il drop en PISTOL régulier)
+                // Récupère les balles restantes du pistolet AVANT de le retirer
+                int ammo = PistolItem.MAX_AMMO;
+                for (int i = 0; i < player.getInventory().size(); i++) {
+                    ItemStack s = player.getInventory().getStack(i);
+                    if (s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL)) {
+                        ammo = PistolItem.getAmmo(s);
+                        break;
+                    }
+                }
+                // Retire le pistolet de l'inventaire avant le drop normal
                 player.getInventory().remove(
                         s -> s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL),
                         Integer.MAX_VALUE, player.getInventory());
-                // Drop un HIDDEN_PISTOL au sol (ramassable uniquement par les innocents)
-                gm.dropHiddenPistolAt(player);
+                // Drop un HIDDEN_PISTOL au sol avec ses balles restantes
+                gm.dropHiddenPistolAt(player, ammo);
             }
             return true; // Autorise la mort à se poursuivre normalement
         });

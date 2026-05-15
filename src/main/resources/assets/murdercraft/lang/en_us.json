@@ -74,6 +74,9 @@
   "murdercraft.pistol.not_detective": "Only the Detective can use the pistol",
   "murdercraft.pistol.hit_murderer": "🎯 You eliminated a Murderer: %s",
   "murdercraft.pistol.friendly_fire": "⚠ You shot an innocent — you lose your weapon permanently",
+  "murdercraft.pistol.empty": "⛔ CLICK! Out of bullets",
+  "murdercraft.pistol.bullets_remaining": "🔫 Bullets remaining: %s/%s",
+  "murdercraft.pistol.tooltip.bullets": "Bullets: %s/%s",
   "murdercraft.hidden_pistol.promoted": "★ You picked up the hidden pistol — you are now a Detective!",
 
   "murdercraft.hud.role_label": "Role",

@@ -3,6 +3,7 @@ package fr.murdercraft.game;
 import fr.murdercraft.MurderCraft;
 import fr.murdercraft.config.MurderCraftConfig;
 import fr.murdercraft.items.ModItems;
+import fr.murdercraft.items.PistolItem;
 import fr.murdercraft.network.ModNetworking;
 import fr.murdercraft.roles.Role;
 import fr.murdercraft.roles.RoleManager;
@@ -271,7 +272,7 @@ public class GameManager {
             p.getInventory().clear();
             switch (role) {
                 case MURDERER -> p.getInventory().insertStack(new ItemStack(ModItems.KNIFE));
-                case DETECTIVE -> p.getInventory().insertStack(new ItemStack(ModItems.PISTOL));
+                case DETECTIVE -> p.getInventory().insertStack(PistolItem.createWithAmmo(ModItems.PISTOL, PistolItem.MAX_AMMO));
                 default -> { /* INNOCENT : rien */ }
             }
             sendBriefing(p, role);
@@ -337,7 +338,7 @@ public class GameManager {
         player.getInventory().clear();
         switch (role) {
             case MURDERER -> player.getInventory().insertStack(new ItemStack(ModItems.KNIFE));
-            case DETECTIVE -> player.getInventory().insertStack(new ItemStack(ModItems.PISTOL));
+            case DETECTIVE -> player.getInventory().insertStack(PistolItem.createWithAmmo(ModItems.PISTOL, PistolItem.MAX_AMMO));
             default -> { /* INNOCENT : rien */ }
         }
 
@@ -381,20 +382,21 @@ public class GameManager {
 
             Role role = roleManager.getRole(p);
 
-            // Innocent qui a ramassé le pistolet caché → promotion auto
+            // Innocent qui a ramassé le pistolet caché → promotion auto, préserve les balles
             if (role == Role.INNOCENT && hasHiddenPistol(p) && !roleManager.isPermanentlyDisarmed(p.getUuid())) {
+                int ammo = getAnyPistolAmmo(p);
                 removeAllPistols(p);
-                p.getInventory().insertStack(new ItemStack(ModItems.PISTOL));
+                p.getInventory().insertStack(PistolItem.createWithAmmo(ModItems.PISTOL, ammo));
                 promoteToDetective(p);
             }
-            // Meurtrier avec un pistolet → on lui retire
+            // Meurtrier avec un pistolet → on lui retire, préserve les balles dans le drop
             else if (role == Role.MURDERER && hasAnyPistol(p)) {
+                int ammo = getAnyPistolAmmo(p);
                 removeAllPistols(p);
                 long now = System.currentTimeMillis();
                 Long last = lastPistolEjection.get(p.getUuid());
                 if (last == null || now - last > EJECTION_COOLDOWN_MS) {
-                    // Première éjection (ou cooldown expiré) : jette le pistolet au loin
-                    throwHiddenPistolAwayFrom(p);
+                    throwHiddenPistolAwayFrom(p, ammo);
                     lastPistolEjection.put(p.getUuid(), now);
                     p.sendMessage(Text.translatable("murdercraft.murderer.cannot_take_pistol")
                             .formatted(Formatting.RED), true);
@@ -404,10 +406,10 @@ public class GameManager {
         }
     }
 
-    /** Drop un HIDDEN_PISTOL au sol à la position du joueur (utilisé pour le tir ami et la mort). */
-    public void dropHiddenPistolAt(ServerPlayerEntity player) {
+    /** Drop un HIDDEN_PISTOL au sol à la position du joueur, avec un nombre de balles donné. */
+    public void dropHiddenPistolAt(ServerPlayerEntity player, int ammo) {
         if (player == null || player.getServerWorld() == null) return;
-        ItemStack stack = new ItemStack(ModItems.HIDDEN_PISTOL);
+        ItemStack stack = PistolItem.createWithAmmo(ModItems.HIDDEN_PISTOL, ammo);
         ItemEntity drop = new ItemEntity(player.getServerWorld(),
                 player.getX(), player.getY() + 0.5, player.getZ(), stack);
         drop.setNeverDespawn();
@@ -416,23 +418,26 @@ public class GameManager {
         player.getServerWorld().spawnEntity(drop);
     }
 
+    /** Variante sans ammo : pistolet plein (utile pour les anciens appels ou tests). */
+    public void dropHiddenPistolAt(ServerPlayerEntity player) {
+        dropHiddenPistolAt(player, PistolItem.MAX_AMMO);
+    }
+
     /**
-     * Jette le pistolet AU LOIN du joueur (utilisé quand un meurtrier le ramasse
-     * involontairement). Pickup delay de 3s + vitesse vers l'avant pour éviter
-     * la boucle infinie de pickup/drop.
+     * Jette le pistolet AU LOIN du joueur (meurtrier auto-éjection).
+     * Préserve le nombre de balles.
      */
-    public void throwHiddenPistolAwayFrom(ServerPlayerEntity player) {
+    public void throwHiddenPistolAwayFrom(ServerPlayerEntity player, int ammo) {
         if (player == null || player.getServerWorld() == null) return;
         var dir = player.getRotationVec(1.0f).normalize();
         var throwPos = player.getEyePos().add(dir.multiply(0.8));
-        ItemStack stack = new ItemStack(ModItems.HIDDEN_PISTOL);
+        ItemStack stack = PistolItem.createWithAmmo(ModItems.HIDDEN_PISTOL, ammo);
         ItemEntity drop = new ItemEntity(player.getServerWorld(),
                 throwPos.x, throwPos.y, throwPos.z, stack);
-        // Force d'éjection vers l'avant (style "jeter loin")
         drop.setVelocity(dir.x * 0.6, 0.3, dir.z * 0.6);
         drop.setNeverDespawn();
         drop.setGlowing(true);
-        drop.setPickupDelay(60); // 3s avant ramassage possible
+        drop.setPickupDelay(60);
         player.getServerWorld().spawnEntity(drop);
     }
 
@@ -448,6 +453,17 @@ public class GameManager {
         p.getInventory().remove(
                 s -> s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL),
                 Integer.MAX_VALUE, p.getInventory());
+    }
+
+    /** Lit les balles restantes du premier pistolet trouvé dans l'inventaire. */
+    private int getAnyPistolAmmo(ServerPlayerEntity p) {
+        for (int i = 0; i < p.getInventory().size(); i++) {
+            ItemStack s = p.getInventory().getStack(i);
+            if (s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL)) {
+                return PistolItem.getAmmo(s);
+            }
+        }
+        return PistolItem.MAX_AMMO;
     }
 
     /**
@@ -541,7 +557,7 @@ public class GameManager {
         Vec3d pos = randomPlayer.getPos().add(
                 (Math.random() - 0.5) * 30, 1.0, (Math.random() - 0.5) * 30);
 
-        ItemStack stack = new ItemStack(ModItems.HIDDEN_PISTOL);
+        ItemStack stack = PistolItem.createWithAmmo(ModItems.HIDDEN_PISTOL, PistolItem.MAX_AMMO);
         ItemEntity drop = new ItemEntity(randomPlayer.getServerWorld(), pos.x, pos.y, pos.z, stack);
         drop.setNeverDespawn();
         drop.setGlowing(true);

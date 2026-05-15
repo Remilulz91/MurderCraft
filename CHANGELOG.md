@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.0-beta.4] - 2-bullet pistol ammo system
+
+### Added (Squeezie ruleset)
+- **Pistols now have only 2 bullets** (configurable via the `MAX_AMMO` constant).
+  Each pistol — the Detective's starting pistol AND the hidden pistol that drops
+  mid-round — starts with 2 bullets. When both are spent, the pistol becomes
+  useless (just plays a dry click sound).
+- **Ammo persists across drops and pickups**: if a Detective fires one bullet
+  and then dies (or friendly-fires, or gets auto-ejected as a Murderer), the
+  dropped pistol retains its remaining 1 bullet. The next innocent who picks it
+  up inherits that count.
+- **Ammo displayed in tooltip**: hover over the pistol in your inventory to see
+  "Bullets: X/2" with color coding (green when loaded, red when empty).
+- **Action bar feedback after each shot**: shows "🔫 Bullets remaining: X/2"
+- **Dry-click sound** (block dispenser fail) when trying to fire an empty pistol.
+
+### Why this rule matters
+This dramatically raises the tension for the Detective role. You can't just
+spray-and-pray — every shot must count. Misidentifying a Murderer or accidentally
+shooting an Innocent (which still loses you the pistol permanently anyway) now
+also wastes a precious bullet.
+
 ## [0.5.0-beta.3] - Proper attribution
 
 ### Changed

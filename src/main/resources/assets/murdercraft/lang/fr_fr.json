@@ -74,6 +74,9 @@
   "murdercraft.pistol.not_detective": "Seul le Justicier peut utiliser le pistolet",
   "murdercraft.pistol.hit_murderer": "🎯 Tu as éliminé un Meurtrier : %s",
   "murdercraft.pistol.friendly_fire": "⚠ Tu as tiré sur un innocent — tu perds ton arme définitivement",
+  "murdercraft.pistol.empty": "⛔ CLIC ! Plus de balles",
+  "murdercraft.pistol.bullets_remaining": "🔫 Balles restantes : %s/%s",
+  "murdercraft.pistol.tooltip.bullets": "Balles : %s/%s",
   "murdercraft.hidden_pistol.promoted": "★ Tu as ramassé le pistolet caché — tu es maintenant Justicier !",
 
   "murdercraft.hud.role_label": "Rôle",
