@@ -333,6 +333,9 @@ public class GameManager {
         // Active le mode debug — empêche les conditions de victoire de fermer la partie
         this.debugMode = true;
 
+        // Setup la world border même en debug (sinon elle n'apparaît jamais)
+        setupWorldBorder();
+
         List<ServerPlayerEntity> players = resolveParticipants();
         roleManager.assignRoles(players);
 
@@ -612,16 +615,24 @@ public class GameManager {
     /** Affiche le compte à rebours d'immunité en action bar (pour ceux qui sont protégés). */
     private void showSafeSpawnCountdown() {
         if (server == null || safeSpawnExpiration.isEmpty()) return;
-        for (UUID id : safeSpawnExpiration.keySet()) {
+        // Itérateur explicite car on supprime des entrées au passage
+        java.util.Iterator<UUID> it = safeSpawnExpiration.keySet().iterator();
+        while (it.hasNext()) {
+            UUID id = it.next();
             ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
-            if (p == null) continue;
+            if (p == null) {
+                it.remove();
+                continue;
+            }
             int secondsLeft = getSafeSpawnSecondsLeft(id);
             if (secondsLeft > 0) {
                 p.sendMessage(Text.translatable("murdercraft.spawn.immunity_countdown", secondsLeft)
                         .formatted(Formatting.AQUA, Formatting.BOLD), true);
             } else {
+                // Message d'expiration envoyé UNE SEULE FOIS puis on retire l'entrée
                 p.sendMessage(Text.translatable("murdercraft.spawn.immunity_expired")
                         .formatted(Formatting.YELLOW), true);
+                it.remove();
             }
         }
     }
