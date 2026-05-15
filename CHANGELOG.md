@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0-beta.3] - Proper attribution
+
+### Changed
+- **Credits and attribution corrected**: The ruleset implemented in this mod is
+  the variant designed by **Squeezie & Théodore Bonnet**, not the original
+  Garry's Mod Murder ruleset. Updated:
+  - Mod description (visible in Mod Menu)
+  - README.md credits section
+  - GitHub repository description (manual update by maintainer)
+  - Modrinth project description (manual update by maintainer)
+- GMod Murder is still mentioned as the genre origin, but Squeezie & Théodore
+  Bonnet now receive primary credit for the specific rules this mod implements.
+
 ## [0.5.0-beta.2] - Config security fix
 
 ### Security
@@ -65,12 +78,12 @@ Please report any bugs you find on the GitHub issue tracker.
 - New command `/murder task reveal <player>`
 
 ### Fixed
-- **Time-out win condition**: when the timer expires with surviving innocents, INNOCENTS WIN (was incorrectly: murderers win). Matches official GMod Murder rules.
+- **Time-out win condition**: when the timer expires with surviving innocents, INNOCENTS WIN (was incorrectly: murderers win). Matches the Squeezie / Théodore Bonnet ruleset.
 
-## [0.2.0] - Phase A - Authentic GMod Murder rules
+## [0.2.0] - Phase A - Ruleset alignment (Squeezie / Théodore Bonnet variant)
 
 ### Added
-- **Multi-round session system**: 4 rounds per session by default (like GMod Murder), configurable
+- **Multi-round session system**: 4 rounds per session by default (matching the Squeezie / Théodore Bonnet variant), configurable
 - **15 minutes default round duration** (was 8 min)
 - **Player scaling up to 32** (was 16)
 - **Round counter in HUD** showing "Round X/Y" during play

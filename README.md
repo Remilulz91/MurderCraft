@@ -1,6 +1,7 @@
 # MurderCraft
 
-> A multiplayer Minecraft mod inspired by **Garry's Mod Murder**.
+> A multiplayer Minecraft mod inspired by the **Murder** game mode designed by
+> **Squeezie & Théodore Bonnet** (itself inspired by Garry's Mod Murder).
 > 2 hidden murderers, 1 armed detective, innocents who must survive.
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen)](https://www.minecraft.net/)
@@ -162,6 +163,11 @@ Released under the [MIT License](LICENSE) — fork, modify, redistribute freely 
 
 ## 🙌 Credits
 
-- **Concept origin**: Garry's Mod — Murder
+- **Direct inspiration**: The "Murder" game mode designed by **Squeezie & Théodore Bonnet** (the rules implemented in this mod follow their variant, not the original GMod ruleset)
+- **Original concept**: Garry's Mod — Murder (the genre origin)
 - **Mod design & development**: Remilulz_91
-- **Gameplay inspirations**: UHC, UHC Werewolves, Hypixel Murder Mystery
+- **Other gameplay inspirations**: UHC, UHC Werewolves, Hypixel Murder Mystery
+
+### Important note about rules
+
+The ruleset in this mod (2 murderers who don't know each other, hidden pistol mid-game, friendly fire = lose your gun, 4 rounds of 15 minutes, task-based reveal mechanic) is based on the variant designed by **Squeezie & Théodore Bonnet**. It does **not** reproduce the exact rules of the original Garry's Mod Murder game mode.
