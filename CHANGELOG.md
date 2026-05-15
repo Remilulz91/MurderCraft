@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.0-beta.5] - Custom items cannot be dropped manually
+
+### Added
+- **Manual drop prevention**: pressing Q or dragging out of inventory no longer
+  drops the Murderer's Knife, Detective's Pistol, Hidden Pistol or Mystery Token.
+  The item is instantly returned to the player with the message
+  "⛔ This item cannot be dropped" in the action bar.
+- **Death cleanup**: when a player dies, all custom items in their inventory are
+  removed before the vanilla drop logic, ensuring nothing leaks via death drops.
+  (The Detective's pistol-drop-on-death mechanic still works correctly — it's
+  handled explicitly with ammo preservation before the cleanup.)
+
+### Why
+Prevents accidental losses (item dropped into lava, off a cliff, into water with
+zombies, etc.) and stops players from breaking the game state by intentionally
+discarding their role items.
+
+### Internal logic
+Detection uses Minecraft's `retainOwnership` flag on ItemEntity: a player-initiated
+drop sets the owner UUID, while mod-spawned drops (`GameManager.dropHiddenPistolAt`)
+leave it null. The intercept only fires on player-initiated drops.
+
 ## [0.5.0-beta.4] - 2-bullet pistol ammo system
 
 ### Added (Squeezie ruleset)

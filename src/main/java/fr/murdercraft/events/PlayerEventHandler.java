@@ -5,6 +5,7 @@ import fr.murdercraft.game.GameManager;
 import fr.murdercraft.items.ModItems;
 import fr.murdercraft.items.PistolItem;
 import fr.murdercraft.roles.Role;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -13,7 +14,11 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
+
+import java.util.UUID;
 
 /**
  * Listeners pour les événements joueurs : déconnexion, ramassage d'item, mort.
@@ -50,7 +55,7 @@ public class PlayerEventHandler {
             }
         });
 
-        // Mort d'un joueur — règles spéciales pour le justicier (drop du pistolet au sol)
+        // Mort d'un joueur — règles spéciales pour le justicier + cleanup général
         ServerLivingEntityEvents.ALLOW_DEATH.register((entity, damageSource, damageAmount) -> {
             if (!(entity instanceof ServerPlayerEntity player)) return true;
             GameManager gm = GameManager.get();
@@ -68,14 +73,48 @@ public class PlayerEventHandler {
                         break;
                     }
                 }
-                // Retire le pistolet de l'inventaire avant le drop normal
-                player.getInventory().remove(
-                        s -> s.isOf(ModItems.PISTOL) || s.isOf(ModItems.HIDDEN_PISTOL),
-                        Integer.MAX_VALUE, player.getInventory());
                 // Drop un HIDDEN_PISTOL au sol avec ses balles restantes
                 gm.dropHiddenPistolAt(player, ammo);
             }
+
+            // Pour TOUS les rôles : retire les items custom avant la mort pour qu'ils
+            // ne tombent pas comme drops d'inventaire vanilla
+            player.getInventory().remove(
+                    s -> isCustomMurderItem(s),
+                    Integer.MAX_VALUE, player.getInventory());
+
             return true; // Autorise la mort à se poursuivre normalement
         });
+
+        // Bloque le drop manuel (Q-press ou drag-out) des items custom
+        // Astuce : un drop manuel attribue l'owner au joueur (via retainOwnership=true)
+        //         tandis qu'un drop système (notre dropHiddenPistolAt) laisse l'owner null
+        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            if (!(entity instanceof ItemEntity item)) return;
+            ItemStack stack = item.getStack();
+            if (stack.isEmpty()) return;
+            if (!isCustomMurderItem(stack)) return;
+
+            UUID ownerUuid = item.getOwner();
+            if (ownerUuid == null) return; // drop système, on laisse passer
+
+            ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(ownerUuid);
+            if (owner == null) return; // joueur déconnecté, on laisse l'item
+
+            // Rend l'item à son propriétaire et supprime l'entity drop
+            ItemStack toReturn = stack.copy();
+            owner.getInventory().insertStack(toReturn);
+            item.discard();
+            owner.sendMessage(Text.translatable("murdercraft.item.no_drop")
+                    .formatted(Formatting.RED), true);
+        });
+    }
+
+    /** Items custom du mod qui ne doivent pas être dropés/perdus. */
+    private static boolean isCustomMurderItem(ItemStack stack) {
+        return stack.isOf(ModItems.KNIFE)
+                || stack.isOf(ModItems.PISTOL)
+                || stack.isOf(ModItems.HIDDEN_PISTOL)
+                || stack.isOf(ModItems.MYSTERY_TOKEN);
     }
 }

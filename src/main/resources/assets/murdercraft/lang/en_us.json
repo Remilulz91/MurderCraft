@@ -77,6 +77,7 @@
   "murdercraft.pistol.empty": "⛔ CLICK! Out of bullets",
   "murdercraft.pistol.bullets_remaining": "🔫 Bullets remaining: %s/%s",
   "murdercraft.pistol.tooltip.bullets": "Bullets: %s/%s",
+  "murdercraft.item.no_drop": "⛔ This item cannot be dropped",
   "murdercraft.hidden_pistol.promoted": "★ You picked up the hidden pistol — you are now a Detective!",
 
   "murdercraft.hud.role_label": "Role",
